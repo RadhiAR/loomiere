@@ -371,6 +371,15 @@ export default function Navbar({ theme = "dark" }: Props) {
                             <Link href="/account" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 My Account
                             </Link>
+                            {loggedIn ? (
+                                <Link
+                                    href="/upload-products"
+                                    onClick={() => setMenuOpen(false)}
+                                    className="block w-full rounded-2xl border border-[#efc5d7] bg-white px-5 py-4 text-left text-[13px] uppercase tracking-[0.22em] text-black/75 transition hover:bg-[#ffe3ee]"
+                                >
+                                    Upload your products
+                                </Link>
+                            ) : null}
 
                             <div className="my-3 border-t border-[#f2cddd]" />
 
@@ -491,8 +500,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Login
@@ -505,8 +514,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Sign Up
@@ -519,8 +528,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setForgotMessage("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "forgot"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Forgot Password
