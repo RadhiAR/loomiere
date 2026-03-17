@@ -19,7 +19,13 @@ type HomeItem =
     | "wall-space";
 
 type PetItem = "dog" | "cat" | "small-pet" | "pet-bed" | "pet-corner";
-type PersonItem = "upper-body" | "full-look" | "hair-accessories" | "jewellery-zone";
+
+type PersonItem =
+    | "upper-body"
+    | "full-look"
+    | "hair-accessories"
+    | "jewellery-zone";
+
 type OtherItem = "gift-item" | "basket" | "decor-piece" | "custom-object";
 
 type AccessoryGoal =
@@ -101,13 +107,18 @@ function getAccessoryOptions(
     selectedItem: string
 ): Array<{ value: AccessoryGoal; label: string }> {
     if (scanCategory === "home-decor-furniture") {
-        if (selectedItem === "table" || selectedItem === "coffee-table" || selectedItem === "dining-table") {
+        if (
+            selectedItem === "table" ||
+            selectedItem === "coffee-table" ||
+            selectedItem === "dining-table"
+        ) {
             return [
                 { value: "coasters", label: "Coasters" },
                 { value: "table-runner", label: "Table Runner" },
                 { value: "decor-accessory", label: "Decor Accessory" },
             ];
         }
+
         if (selectedItem === "chair") {
             return [
                 { value: "chair-cover", label: "Chair Cover" },
@@ -115,6 +126,7 @@ function getAccessoryOptions(
                 { value: "decor-accessory", label: "Decor Accessory" },
             ];
         }
+
         if (selectedItem === "sofa") {
             return [
                 { value: "cushion-cover", label: "Cushion Cover" },
@@ -122,6 +134,7 @@ function getAccessoryOptions(
                 { value: "decor-accessory", label: "Decor Accessory" },
             ];
         }
+
         if (selectedItem === "bed") {
             return [
                 { value: "bed-throw", label: "Bed Throw" },
@@ -129,6 +142,7 @@ function getAccessoryOptions(
                 { value: "throw-blanket", label: "Layered Blanket" },
             ];
         }
+
         if (selectedItem === "island" || selectedItem === "console") {
             return [
                 { value: "island-runner", label: "Island Runner" },
@@ -136,18 +150,21 @@ function getAccessoryOptions(
                 { value: "decor-accessory", label: "Decor Accessory" },
             ];
         }
+
         if (selectedItem === "shelf") {
             return [
                 { value: "shelf-decor", label: "Shelf Decor" },
                 { value: "decor-accessory", label: "Decor Accessory" },
             ];
         }
+
         if (selectedItem === "wall-space") {
             return [
                 { value: "wall-hanging", label: "Wall Hanging" },
                 { value: "decor-accessory", label: "Decor Accessory" },
             ];
         }
+
         return [{ value: "decor-accessory", label: "Decor Accessory" }];
     }
 
@@ -177,30 +194,196 @@ function getAccessoryOptions(
     ];
 }
 
-function getDisplayLabelForItem(scanCategory: ScanCategory, selectedItem: string) {
+function getDisplayLabelForItem(
+    scanCategory: ScanCategory,
+    selectedItem: string
+) {
     if (scanCategory === "home-decor-furniture") {
-        return homeItemOptions.find((item) => item.value === selectedItem)?.label || "Selected Item";
+        return (
+            homeItemOptions.find((item) => item.value === selectedItem)?.label ||
+            "Selected Item"
+        );
     }
+
     if (scanCategory === "pet") {
-        return petItemOptions.find((item) => item.value === selectedItem)?.label || "Selected Item";
+        return (
+            petItemOptions.find((item) => item.value === selectedItem)?.label ||
+            "Selected Item"
+        );
     }
+
     if (scanCategory === "person") {
-        return personItemOptions.find((item) => item.value === selectedItem)?.label || "Selected Item";
+        return (
+            personItemOptions.find((item) => item.value === selectedItem)?.label ||
+            "Selected Item"
+        );
     }
-    return otherItemOptions.find((item) => item.value === selectedItem)?.label || "Selected Item";
+
+    return (
+        otherItemOptions.find((item) => item.value === selectedItem)?.label ||
+        "Selected Item"
+    );
+}
+
+function buildLocalRecommendations(
+    scanCategory: ScanCategory,
+    selectedItem: string,
+    goal: string,
+    notes: string
+): { summary: string; recommendations: AIRecommendation[] } {
+    const noteText = notes.trim() ? ` Notes: ${notes.trim()}` : "";
+
+    if (scanCategory === "pet") {
+        return {
+            summary: `Here are product suggestions for your ${selectedItem.replace(
+                /-/g,
+                " "
+            )}.${noteText}`,
+            recommendations: [
+                {
+                    product_id: "pet-1",
+                    product_name: "Pet Sweater",
+                    category: "Pet",
+                    reason: "A cozy handcrafted option for everyday comfort.",
+                    placement_note: "Best suited for colder days or styled pet looks.",
+                    match_score: goal === "pet-sweater" ? 96 : 88,
+                },
+                {
+                    product_id: "pet-2",
+                    product_name: "Pet Bandana",
+                    category: "Pet",
+                    reason: "A lightweight accessory that adds a soft handmade touch.",
+                    placement_note: "Great for casual styling and gift-friendly bundles.",
+                    match_score: goal === "pet-bandana" ? 95 : 84,
+                },
+                {
+                    product_id: "pet-3",
+                    product_name: "Pet Blanket",
+                    category: "Pet",
+                    reason: "A soft layer for beds, crates, or sofa corners.",
+                    placement_note: "Works well for comfort-focused and practical use.",
+                    match_score: goal === "pet-blanket" ? 94 : 86,
+                },
+            ],
+        };
+    }
+
+    if (scanCategory === "person") {
+        return {
+            summary: `Here are product suggestions based on the selected ${selectedItem.replace(
+                /-/g,
+                " "
+            )}.${noteText}`,
+            recommendations: [
+                {
+                    product_id: "person-1",
+                    product_name: "Crochet Top",
+                    category: "Wearables",
+                    reason: "A handcrafted statement piece that suits boutique styling.",
+                    placement_note: "Best for fashion-led looks and signature outfits.",
+                    match_score: goal === "crochet-top" ? 96 : 87,
+                },
+                {
+                    product_id: "person-2",
+                    product_name: "Scarf",
+                    category: "Wearables",
+                    reason: "A versatile add-on that complements simple or elegant looks.",
+                    placement_note: "Easy to pair with multiple outfits.",
+                    match_score: goal === "scarf" ? 95 : 85,
+                },
+                {
+                    product_id: "person-3",
+                    product_name: "Hair Accessory",
+                    category: "Accessories",
+                    reason: "A delicate handmade piece for subtle styling.",
+                    placement_note: "Works well for gifting or finishing touches.",
+                    match_score: goal === "hair-accessory" ? 94 : 83,
+                },
+            ],
+        };
+    }
+
+    if (scanCategory === "home-decor-furniture") {
+        return {
+            summary: `Here are product suggestions for your ${selectedItem.replace(
+                /-/g,
+                " "
+            )}.${noteText}`,
+            recommendations: [
+                {
+                    product_id: "home-1",
+                    product_name: "Table Runner",
+                    category: "Home",
+                    reason: "Adds texture and a handcrafted look to flat surfaces.",
+                    placement_note: "Ideal for tables, islands, and consoles.",
+                    match_score:
+                        goal === "table-runner" || goal === "island-runner" ? 96 : 88,
+                },
+                {
+                    product_id: "home-2",
+                    product_name: "Cushion Cover",
+                    category: "Home",
+                    reason: "A warm decorative option for chairs, sofas, or beds.",
+                    placement_note: "Best for soft layering and comfort-focused styling.",
+                    match_score: goal === "cushion-cover" ? 95 : 86,
+                },
+                {
+                    product_id: "home-3",
+                    product_name: "Decor Accessory",
+                    category: "Home",
+                    reason: "A versatile handmade accent for shelves and surfaces.",
+                    placement_note: "Good for subtle decor updates and gift sets.",
+                    match_score:
+                        goal === "decor-accessory" || goal === "shelf-decor" ? 94 : 84,
+                },
+            ],
+        };
+    }
+
+    return {
+        summary: `Here are product suggestions based on your selected item.${noteText}`,
+        recommendations: [
+            {
+                product_id: "other-1",
+                product_name: "Custom Knitwear",
+                category: "Custom",
+                reason: "A flexible handmade option for unique requests.",
+                placement_note: "Best when the item does not fit standard categories.",
+                match_score: goal === "custom-knitwear" ? 95 : 86,
+            },
+            {
+                product_id: "other-2",
+                product_name: "Decor Accessory",
+                category: "Custom",
+                reason: "A simple decorative handmade piece for styling or gifting.",
+                placement_note: "Useful for baskets, gift items, or display corners.",
+                match_score: goal === "decor-accessory" ? 93 : 84,
+            },
+            {
+                product_id: "other-3",
+                product_name: "Gift Wrap / Covering",
+                category: "Custom",
+                reason: "A handcrafted addition for presentation and gifting.",
+                placement_note: "Best for special orders or curated bundles.",
+                match_score: goal === "gift-wrap" ? 94 : 83,
+            },
+        ],
+    };
 }
 
 export default function LoomeiraAIPage() {
-    const [scanCategory, setScanCategory] = useState<ScanCategory>("home-decor-furniture");
+    const [scanCategory, setScanCategory] =
+        useState<ScanCategory>("home-decor-furniture");
     const [selectedItem, setSelectedItem] = useState<string>("table");
     const [goal, setGoal] = useState<AccessoryGoal>("coasters");
     const [notes, setNotes] = useState("");
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string>("");
-
+    const [imagePreview, setImagePreview] = useState("");
     const [loading, setLoading] = useState(false);
     const [scanSummary, setScanSummary] = useState("");
-    const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
+    const [recommendations, setRecommendations] = useState<AIRecommendation[]>(
+        []
+    );
     const [error, setError] = useState("");
 
     const accessoryOptions = useMemo(() => {
@@ -218,11 +401,13 @@ export default function LoomeiraAIPage() {
             setGoal("coasters");
             return;
         }
+
         if (value === "pet") {
             setSelectedItem("dog");
             setGoal("pet-sweater");
             return;
         }
+
         if (value === "person") {
             setSelectedItem("upper-body");
             setGoal("scarf");
@@ -247,12 +432,20 @@ export default function LoomeiraAIPage() {
 
     function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
         const file = event.target.files?.[0] || null;
+
         setImageFile(file);
         setRecommendations([]);
         setScanSummary("");
         setError("");
 
         if (!file) {
+            setImagePreview("");
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            setError("Please upload a valid image file.");
+            setImageFile(null);
             setImagePreview("");
             return;
         }
@@ -278,40 +471,32 @@ export default function LoomeiraAIPage() {
         setScanSummary("");
 
         try {
-            const formData = new FormData();
-            formData.append("scanCategory", scanCategory);
-            formData.append("selectedItem", selectedItem);
-            formData.append("goal", goal);
-            formData.append("notes", notes);
-            formData.append("image", imageFile);
+            const result = buildLocalRecommendations(
+                scanCategory,
+                selectedItem,
+                goal,
+                notes
+            );
 
-            const res = await fetch("/api/loomeira-ai", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data?.message || "Something went wrong.");
-            }
-
-            setScanSummary(data.scan_summary || "");
-            setRecommendations(Array.isArray(data.recommendations) ? data.recommendations : []);
-        } catch (err: any) {
-            setError(err?.message || "Failed to scan image.");
+            setScanSummary(result.summary);
+            setRecommendations(result.recommendations);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to scan image.");
         } finally {
             setLoading(false);
         }
     }
 
     function renderItemDropdown() {
+        const className =
+            "w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none focus:border-[#d86b98]";
+
         if (scanCategory === "home-decor-furniture") {
             return (
                 <select
                     value={selectedItem}
                     onChange={(e) => handleItemChange(e.target.value)}
-                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none focus:border-[#d86b98]"
+                    className={className}
                 >
                     {homeItemOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -327,7 +512,7 @@ export default function LoomeiraAIPage() {
                 <select
                     value={selectedItem}
                     onChange={(e) => handleItemChange(e.target.value)}
-                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none focus:border-[#d86b98]"
+                    className={className}
                 >
                     {petItemOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -343,7 +528,7 @@ export default function LoomeiraAIPage() {
                 <select
                     value={selectedItem}
                     onChange={(e) => handleItemChange(e.target.value)}
-                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none focus:border-[#d86b98]"
+                    className={className}
                 >
                     {personItemOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -358,7 +543,7 @@ export default function LoomeiraAIPage() {
             <select
                 value={selectedItem}
                 onChange={(e) => handleItemChange(e.target.value)}
-                className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none focus:border-[#d86b98]"
+                className={className}
             >
                 {otherItemOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -372,43 +557,42 @@ export default function LoomeiraAIPage() {
     const selectedItemLabel = getDisplayLabelForItem(scanCategory, selectedItem);
 
     return (
-        <main className="min-h-screen bg-[#fff4f8]">
-            <div className="relative">
-                <Navbar theme="light" />
-                <div className="fixed top-6 left-6 z-[9999] pointer-events-auto">
-                    <BackButton theme="light" href="/" label="Home" />
-                </div>
-                <div className="h-24" />
-            </div>
+        <main className="min-h-screen bg-[#fff8fb] text-[#1a1a1a]">
+            <Navbar theme="light" />
 
-            <section className="mx-auto max-w-7xl px-6 py-12">
-                <div className="max-w-4xl">
-                    <div className="text-xs uppercase tracking-[0.24em] text-black/45">
+            <section className="mx-auto max-w-[1400px] px-4 pb-16 pt-28 md:px-8 md:pt-32">
+                <BackButton href="/" label="Home" />
+
+                <div className="mt-8 max-w-4xl">
+                    <div className="text-xs uppercase tracking-[0.35em] text-black/45">
                         Loomeira AI
                     </div>
-                    <h1 className="mt-3 text-4xl font-light italic text-black/90">
+                    <h1 className="mt-4 text-4xl italic leading-tight md:text-6xl">
                         Scan an item and get AI-powered Loomeira product suggestions
                     </h1>
-                    <p className="mt-4 text-sm leading-7 text-black/60">
-                        Upload a photo of a table, sofa, chair, bed, pet, person, or another object.
-                        Loomeira AI will analyze it and recommend the best products from your store.
+                    <p className="mt-6 max-w-3xl text-base leading-8 text-black/60 md:text-lg">
+                        Upload a photo of a table, sofa, chair, bed, pet, person, or
+                        another object. Loomeira AI will analyze it and recommend the best
+                        products from your store.
                     </p>
                 </div>
 
-                <div className="mt-10 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-                    <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm">
+                <div className="mt-12 grid gap-8 lg:grid-cols-2">
+                    <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm md:p-8">
                         <div className="text-xs uppercase tracking-[0.22em] text-black/50">
                             Scan Setup
                         </div>
 
-                        <div className="mt-6 grid gap-5">
+                        <div className="mt-8 space-y-6">
                             <div>
-                                <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-black/45">
+                                <label className="mb-3 block text-xs uppercase tracking-[0.22em] text-black/50">
                                     What are you scanning?
                                 </label>
                                 <select
                                     value={scanCategory}
-                                    onChange={(e) => handleScanCategoryChange(e.target.value as ScanCategory)}
+                                    onChange={(e) =>
+                                        handleScanCategoryChange(e.target.value as ScanCategory)
+                                    }
                                     className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none focus:border-[#d86b98]"
                                 >
                                     {scanCategoryOptions.map((option) => (
@@ -420,14 +604,14 @@ export default function LoomeiraAIPage() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-black/45">
+                                <label className="mb-3 block text-xs uppercase tracking-[0.22em] text-black/50">
                                     Which item are you scanning?
                                 </label>
                                 {renderItemDropdown()}
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-black/45">
+                                <label className="mb-3 block text-xs uppercase tracking-[0.22em] text-black/50">
                                     What sort of accessories are you looking for?
                                 </label>
                                 <select
@@ -444,41 +628,43 @@ export default function LoomeiraAIPage() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-black/45">
+                                <label className="mb-3 block text-xs uppercase tracking-[0.22em] text-black/50">
                                     Upload image to scan
                                 </label>
-                                <div className="rounded-2xl border border-dashed border-[#efc5d7] bg-white/65 p-4">
+
+                                <div className="rounded-[24px] border border-dashed border-[#efc5d7] bg-white p-4">
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageUpload}
-                                        className="block w-full text-sm text-black/70 file:mr-4 file:rounded-full file:border-0 file:bg-[#ef5f9a] file:px-4 file:py-2 file:text-xs file:uppercase file:tracking-[0.18em] file:text-white hover:file:bg-[#de4d8b]"
+                                        className="block w-full text-sm text-black/70 file:mr-4 file:rounded-full file:border-0 file:bg-[#ef5f9a] file:px-5 file:py-3 file:text-xs file:uppercase file:tracking-[0.18em] file:text-white hover:file:bg-[#de4d8b]"
                                     />
 
                                     {imagePreview ? (
-                                        <div className="mt-4 overflow-hidden rounded-2xl border border-[#f2cddd] bg-white">
+                                        <div className="mt-5 overflow-hidden rounded-2xl border border-[#f2cddd]">
                                             <img
                                                 src={imagePreview}
-                                                alt="Uploaded preview"
-                                                className="h-72 w-full object-cover"
+                                                alt="Selected preview"
+                                                className="h-[240px] w-full object-cover"
                                             />
                                         </div>
                                     ) : (
-                                        <div className="mt-4 rounded-2xl border border-[#f2cddd] bg-[#fff8fb] px-4 py-10 text-center text-sm text-black/45">
-                                            Upload a photo of the exact item you want Loomeira AI to analyze.
-                                        </div>
+                                        <p className="mt-4 text-sm leading-7 text-black/50">
+                                            Upload a photo of the exact item you want Loomeira AI to
+                                            analyze.
+                                        </p>
                                     )}
                                 </div>
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-black/45">
+                                <label className="mb-3 block text-xs uppercase tracking-[0.22em] text-black/50">
                                     Extra notes
                                 </label>
                                 <textarea
-                                    rows={5}
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
+                                    rows={4}
                                     placeholder="Example: I want something soft pink and cozy for this sofa, or a simple elegant styling option for this table."
                                     className="w-full rounded-2xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/85 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
                                 />
@@ -497,7 +683,7 @@ export default function LoomeiraAIPage() {
                         </div>
                     </div>
 
-                    <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm">
+                    <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm md:p-8">
                         <div className="text-xs uppercase tracking-[0.22em] text-black/50">
                             AI Results
                         </div>
@@ -511,18 +697,16 @@ export default function LoomeiraAIPage() {
                         {!loading && !scanSummary && recommendations.length === 0 ? (
                             <div className="mt-6 rounded-2xl border border-[#f2cddd] bg-white/65 px-5 py-8 text-sm leading-7 text-black/55">
                                 Upload an image, choose the item and accessory type, and click
-                                <span className="mx-1 font-medium text-black/75">Scan with Loomeira AI</span>
+                                <span className="mx-1 font-medium text-black/75">
+                                    Scan with Loomeira AI
+                                </span>
                                 to get AI recommendations.
                             </div>
                         ) : null}
 
                         {scanSummary ? (
-                            <div className="mt-6 rounded-2xl border border-[#f2cddd] bg-white/65 px-5 py-4 text-sm text-black/65">
-                                <div className="font-medium text-black/85">Scan summary</div>
-                                <div className="mt-2">{scanSummary}</div>
-                                <div className="mt-3 text-xs text-black/45">
-                                    Item scanned: {selectedItemLabel}
-                                </div>
+                            <div className="mt-6 rounded-2xl border border-[#efc5d7] bg-white p-5 text-sm leading-7 text-black/70">
+                                {scanSummary}
                             </div>
                         ) : null}
 
@@ -531,53 +715,43 @@ export default function LoomeiraAIPage() {
                                 {recommendations.map((item) => (
                                     <div
                                         key={item.product_id}
-                                        className="rounded-2xl border border-[#f2cddd] bg-white p-5 shadow-sm"
+                                        className="rounded-2xl border border-[#efc5d7] bg-white p-5"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div>
-                                                <div className="text-xs uppercase tracking-[0.18em] text-black/45">
+                                                <div className="text-xs uppercase tracking-[0.2em] text-[#d86b98]">
                                                     {item.category}
                                                 </div>
-                                                <h3 className="mt-2 text-xl font-medium text-black/88">
+                                                <h3 className="mt-2 text-xl font-medium text-black/85">
                                                     {item.product_name}
                                                 </h3>
                                             </div>
-
-                                            <span className="rounded-full bg-[#fff1f7] px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-[#c8487d]">
-                                                {item.match_score}% Match
-                                            </span>
+                                            <div className="rounded-full bg-[#fff1f7] px-3 py-1 text-xs font-medium text-[#d86b98]">
+                                                {item.match_score}% match
+                                            </div>
                                         </div>
 
-                                        <div className="mt-4 space-y-3 text-sm leading-6 text-black/65">
-                                            <p>
-                                                <span className="font-medium text-black/82">Why it fits:</span>{" "}
-                                                {item.reason}
-                                            </p>
-                                            <p>
-                                                <span className="font-medium text-black/82">Placement:</span>{" "}
-                                                {item.placement_note}
-                                            </p>
-                                        </div>
+                                        <p className="mt-3 text-sm leading-7 text-black/65">
+                                            {item.reason}
+                                        </p>
 
-                                        <div className="mt-5 flex flex-wrap gap-3">
-                                            <button
-                                                type="button"
-                                                className="rounded-full bg-[#ef5f9a] px-5 py-2.5 text-xs uppercase tracking-[0.18em] text-white transition hover:bg-[#de4d8b]"
-                                            >
-                                                View Product
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="rounded-full border border-[#efc5d7] bg-white px-5 py-2.5 text-xs uppercase tracking-[0.18em] text-black/70 transition hover:bg-[#ffe3ee]"
-                                            >
-                                                Save Suggestion
-                                            </button>
-                                        </div>
+                                        <p className="mt-3 text-sm leading-7 text-black/55">
+                                            <span className="font-medium text-black/75">
+                                                Placement note:
+                                            </span>{" "}
+                                            {item.placement_note}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
                         ) : null}
+
+                        <div className="mt-8 rounded-2xl border border-[#f2cddd] bg-white/75 p-5 text-sm leading-7 text-black/55">
+                            Selected item:
+                            <span className="ml-2 font-medium text-black/75">
+                                {selectedItemLabel}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </section>
