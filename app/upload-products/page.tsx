@@ -13,6 +13,21 @@ const categories = [
 ];
 const discountTypes = ["amount", "percentage"];
 
+function getCategoryRedirect(category: string) {
+    switch (category) {
+        case "home":
+            return "/shop/home";
+        case "pet":
+            return "/shop/pet";
+        case "jewellery":
+            return "/shop/jewellery";
+        case "apparel":
+            return "/shop/apparel";
+        default:
+            return "/shop";
+    }
+}
+
 export default function UploadProductsPage() {
     const router = useRouter();
 
@@ -122,7 +137,7 @@ export default function UploadProductsPage() {
             }
 
             alert("Product uploaded successfully");
-            router.push("/shop");
+            router.push(getCategoryRedirect(form.category));
             router.refresh();
         } catch (error) {
             console.error(error);
