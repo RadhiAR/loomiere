@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Navbar from "@/components/Navbar";
 
 const categories = [
     { label: "home decor", value: "home" },
@@ -132,110 +133,116 @@ export default function UploadProductsPage() {
     }
 
     return (
-        <main className="max-w-3xl mx-auto px-6 py-10">
-            <h1 className="text-3xl font-semibold mb-8">Upload your products</h1>
+        <>
+            <Navbar theme="light" />
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-                <input
-                    className="w-full border rounded-lg p-3"
-                    placeholder="Product name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+            <main className="min-h-screen bg-[#fdf1f6]">
+                <div className="max-w-3xl mx-auto px-6 pt-28 pb-10">
+                    <h1 className="text-3xl font-semibold mb-8">Upload your products</h1>
 
-                <div>
-                    <textarea
-                        className="w-full border rounded-lg p-3"
-                        placeholder="Description (max 200 characters)"
-                        maxLength={200}
-                        value={form.description}
-                        onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                        {form.description.length}/200
-                    </p>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <input
+                            className="w-full border rounded-lg p-3"
+                            placeholder="Product name"
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        />
+
+                        <div>
+                            <textarea
+                                className="w-full border rounded-lg p-3"
+                                placeholder="Description (max 200 characters)"
+                                maxLength={200}
+                                value={form.description}
+                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                {form.description.length}/200
+                            </p>
+                        </div>
+
+                        <select
+                            className="w-full border rounded-lg p-3"
+                            value={form.category}
+                            onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        >
+                            <option value="">Select category</option>
+                            {categories.map((category) => (
+                                <option key={category.value} value={category.value}>
+                                    {category.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        <input
+                            className="w-full border rounded-lg p-3"
+                            type="number"
+                            step="0.01"
+                            placeholder="Price"
+                            value={form.price}
+                            onChange={(e) => setForm({ ...form, price: e.target.value })}
+                        />
+
+                        <input
+                            className="w-full border rounded-lg p-3"
+                            type="date"
+                            value={form.ready_to_ship_date}
+                            onChange={(e) =>
+                                setForm({ ...form, ready_to_ship_date: e.target.value })
+                            }
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input
+                                className="w-full border rounded-lg p-3"
+                                type="number"
+                                step="0.01"
+                                placeholder="Discount value"
+                                value={form.discount_value}
+                                onChange={(e) =>
+                                    setForm({ ...form, discount_value: e.target.value })
+                                }
+                            />
+
+                            <select
+                                className="w-full border rounded-lg p-3"
+                                value={form.discount_type}
+                                onChange={(e) =>
+                                    setForm({ ...form, discount_type: e.target.value })
+                                }
+                            >
+                                <option value="">Select discount type</option>
+                                {discountTypes.map((type) => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block mb-2 font-medium">
+                                Upload photos and videos
+                            </label>
+                            <input
+                                className="w-full border rounded-lg p-3"
+                                type="file"
+                                multiple
+                                accept="image/*,video/*"
+                                onChange={(e) => setFiles(e.target.files)}
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="rounded-xl px-6 py-3 bg-pink-600 text-white hover:bg-pink-700 disabled:opacity-50"
+                        >
+                            {loading ? "Saving..." : "Save"}
+                        </button>
+                    </form>
                 </div>
-
-                <select
-                    className="w-full border rounded-lg p-3"
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                >
-                    <option value="">Select category</option>
-                    {categories.map((category) => (
-                        <option key={category.value} value={category.value}>
-                            {category.label}
-                        </option>
-                    ))}
-                </select>
-
-                <input
-                    className="w-full border rounded-lg p-3"
-                    type="number"
-                    step="0.01"
-                    placeholder="Price"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                />
-
-                <input
-                    className="w-full border rounded-lg p-3"
-                    type="date"
-                    value={form.ready_to_ship_date}
-                    onChange={(e) =>
-                        setForm({ ...form, ready_to_ship_date: e.target.value })
-                    }
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                        className="w-full border rounded-lg p-3"
-                        type="number"
-                        step="0.01"
-                        placeholder="Discount value"
-                        value={form.discount_value}
-                        onChange={(e) =>
-                            setForm({ ...form, discount_value: e.target.value })
-                        }
-                    />
-
-                    <select
-                        className="w-full border rounded-lg p-3"
-                        value={form.discount_type}
-                        onChange={(e) =>
-                            setForm({ ...form, discount_type: e.target.value })
-                        }
-                    >
-                        <option value="">Select discount type</option>
-                        {discountTypes.map((type) => (
-                            <option key={type} value={type}>
-                                {type}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block mb-2 font-medium">
-                        Upload photos and videos
-                    </label>
-                    <input
-                        className="w-full border rounded-lg p-3"
-                        type="file"
-                        multiple
-                        accept="image/*,video/*"
-                        onChange={(e) => setFiles(e.target.files)}
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="rounded-xl border px-6 py-3"
-                >
-                    {loading ? "Saving..." : "Save"}
-                </button>
-            </form>
-        </main>
+            </main>
+        </>
     );
 }
