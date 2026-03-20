@@ -1,13 +1,18 @@
 import nodemailer from "nodemailer";
+import { createClient } from "@supabase/supabase-js";
 
-function createRequestId() {
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2);
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-    return `LMR-CUST-${year}${month}${day}-${random}`;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+function buildRequestId(id: number) {
+    return `LMRA${String(id).padStart(3, "0")}`;
+}
+
+function sanitizeFileName(fileName: string) {
+    return fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
 }
 
 export async function POST(req: Request) {
@@ -45,7 +50,80 @@ export async function POST(req: Request) {
             );
         }
 
-        const requestId = createRequestId();
+        const { data: insertedRow, error: insertError } = await supabase
+            .from("custom_requests")
+            .insert([
+                {
+                    first_name: firstName,
+                    last_name: lastName,
+                    email,
+                    phone,
+                    zipcode,
+                    product_type: productType || null,
+                    description: description || null,
+                    measurements: measurements || null,
+                    notes: notes || null,
+                    status: "submitted",
+                },
+            ])
+            .select("id")
+            .single();
+
+        if (insertError || !insertedRow) {
+            throw new Error(insertError?.message || "Failed to create request record.");
+        }
+
+        const requestId = buildRequestId(insertedRow.id);
+
+        let photoPath: string | null = null;
+        let photoUrl: string | null = null;
+        let attachments: Array<{
+            filename: string;
+            content: Buffer;
+            contentType?: string;
+        }> = [];
+
+        if (hasPhoto && photo instanceof File) {
+            const bytes = await photo.arrayBuffer();
+            const safeFileName = sanitizeFileName(photo.name || "reference.jpg");
+            photoPath = `${requestId}/${Date.now()}-${safeFileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("custom-requests")
+                .upload(photoPath, Buffer.from(bytes), {
+                    contentType: photo.type || "application/octet-stream",
+                    upsert: false,
+                });
+
+            if (uploadError) {
+                throw new Error(uploadError.message);
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from("custom-requests")
+                .getPublicUrl(photoPath);
+
+            photoUrl = publicUrlData.publicUrl;
+
+            attachments.push({
+                filename: photo.name || `${requestId}-reference.jpg`,
+                content: Buffer.from(bytes),
+                contentType: photo.type || "application/octet-stream",
+            });
+        }
+
+        const { error: updateError } = await supabase
+            .from("custom_requests")
+            .update({
+                request_id: requestId,
+                photo_path: photoPath,
+                photo_url: photoUrl,
+            })
+            .eq("id", insertedRow.id);
+
+        if (updateError) {
+            throw new Error(updateError.message);
+        }
 
         const recipientEmail = "amy648354@gmail.com";
 
@@ -59,7 +137,7 @@ export async function POST(req: Request) {
             return Response.json(
                 {
                     message:
-                        "Request ID was created, but email is not configured yet. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM in your environment variables.",
+                        "Custom request saved successfully. Email is not configured yet. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM in your environment variables.",
                     requestId,
                 },
                 { status: 200 }
@@ -75,21 +153,6 @@ export async function POST(req: Request) {
                 pass: smtpPass,
             },
         });
-
-        let attachments: Array<{
-            filename: string;
-            content: Buffer;
-            contentType?: string;
-        }> = [];
-
-        if (hasPhoto && photo instanceof File) {
-            const bytes = await photo.arrayBuffer();
-            attachments.push({
-                filename: photo.name || `${requestId}-reference.jpg`,
-                content: Buffer.from(bytes),
-                contentType: photo.type || "application/octet-stream",
-            });
-        }
 
         const emailText = `
 New Loomière Custom Request Submitted
@@ -110,8 +173,8 @@ Request Details
 Description: ${description || "Not provided"}
 Measurements: ${measurements || "Not provided"}
 Notes: ${notes || "Not provided"}
-
 Photo Uploaded: ${hasPhoto ? "Yes" : "No"}
+Photo URL: ${photoUrl || "Not provided"}
         `.trim();
 
         const emailHtml = `
@@ -134,7 +197,8 @@ Photo Uploaded: ${hasPhoto ? "Yes" : "No"}
                     <strong>Description:</strong> ${description || "Not provided"}<br />
                     <strong>Measurements:</strong> ${measurements || "Not provided"}<br />
                     <strong>Notes:</strong> ${notes || "Not provided"}<br />
-                    <strong>Photo Uploaded:</strong> ${hasPhoto ? "Yes" : "No"}
+                    <strong>Photo Uploaded:</strong> ${hasPhoto ? "Yes" : "No"}<br />
+                    <strong>Photo URL:</strong> ${photoUrl || "Not provided"}
                 </p>
             </div>
         `;
@@ -158,7 +222,7 @@ Photo Uploaded: ${hasPhoto ? "Yes" : "No"}
         console.error("Customize request failed:", error);
 
         return Response.json(
-            { message: "Failed to submit request." },
+            { message: error instanceof Error ? error.message : "Failed to submit request." },
             { status: 500 }
         );
     }
