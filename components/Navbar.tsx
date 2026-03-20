@@ -12,6 +12,7 @@ import {
     registerUser,
     requestPasswordReset,
 } from "@/lib/auth";
+import { isAdminSessionActive, disableAdminSession } from "@/lib/admin-session";
 import BrandLogo from "@/components/BrandLogo";
 
 type Props = {
@@ -85,6 +86,7 @@ export default function Navbar({ theme = "dark" }: Props) {
     const [searchTerm, setSearchTerm] = useState("");
     const [cartCount, setCartCount] = useState(0);
     const [loggedIn, setLoggedIn] = useState(false);
+    const [adminActive, setAdminActive] = useState(false);
     const [currentName, setCurrentName] = useState("");
 
     const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -109,6 +111,10 @@ export default function Navbar({ theme = "dark" }: Props) {
         setCurrentName(user ? `${user.firstName} ${user.lastName}`.trim() : "");
     }
 
+    function refreshAdminState() {
+        setAdminActive(isAdminSessionActive());
+    }
+
     useEffect(() => {
         const updateCart = () => {
             const cart = readCart();
@@ -117,14 +123,19 @@ export default function Navbar({ theme = "dark" }: Props) {
 
         updateCart();
         refreshAuthState();
+        refreshAdminState();
 
         const authListener = () => refreshAuthState();
+        const adminListener = () => refreshAdminState();
 
         window.addEventListener("focus", updateCart);
         window.addEventListener("storage", updateCart);
         window.addEventListener("focus", authListener);
         window.addEventListener("storage", authListener);
         window.addEventListener("loomiere-auth-changed", authListener as EventListener);
+        window.addEventListener("focus", adminListener);
+        window.addEventListener("storage", adminListener);
+        window.addEventListener("loomiere-admin-changed", adminListener as EventListener);
 
         return () => {
             window.removeEventListener("focus", updateCart);
@@ -132,6 +143,9 @@ export default function Navbar({ theme = "dark" }: Props) {
             window.removeEventListener("focus", authListener);
             window.removeEventListener("storage", authListener);
             window.removeEventListener("loomiere-auth-changed", authListener as EventListener);
+            window.removeEventListener("focus", adminListener);
+            window.removeEventListener("storage", adminListener);
+            window.removeEventListener("loomiere-admin-changed", adminListener as EventListener);
         };
     }, []);
 
@@ -269,7 +283,9 @@ export default function Navbar({ theme = "dark" }: Props) {
 
     function handleLogout() {
         logoutUser();
+        disableAdminSession();
         refreshAuthState();
+        refreshAdminState();
         setMenuOpen(false);
         router.push("/");
     }
@@ -371,6 +387,17 @@ export default function Navbar({ theme = "dark" }: Props) {
                             <Link href="/account" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 My Account
                             </Link>
+
+                            {adminActive ? (
+                                <Link
+                                    href="/admin/custom-requests"
+                                    onClick={() => setMenuOpen(false)}
+                                    className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                >
+                                    Dashboard
+                                </Link>
+                            ) : null}
+
                             {loggedIn ? (
                                 <Link
                                     href="/upload-products"
