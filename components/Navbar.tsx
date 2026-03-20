@@ -590,7 +590,7 @@ export default function Navbar({ theme = "dark" }: Props) {
             {menuOpen && (
                 <div className="fixed inset-0 z-[3000]">
                     <div className="absolute inset-0 bg-black/35" onClick={() => setMenuOpen(false)} />
-                    <aside className="absolute right-0 top-0 h-full w-[320px] border-l border-[#f2cddd] bg-[#fff7fa] shadow-2xl">
+                    <aside className="absolute right-0 top-0 h-full w-[320px] overflow-y-auto border-l border-[#f2cddd] bg-[#fff7fa] shadow-2xl">
                         <div className="flex items-center justify-between border-b border-[#f2cddd] px-5 py-5">
                             <div>
                                 <BrandLogo size="sm" />
@@ -611,18 +611,27 @@ export default function Navbar({ theme = "dark" }: Props) {
                             <Link href="/loomiere-ai" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Loomeira AI
                             </Link>
+
+                            <Link href="/loomeira-learning" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                                Loomeira Learning
+                            </Link>
+
                             <Link href="/customize" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Customize
                             </Link>
+
                             <Link href="/contact" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Contact
                             </Link>
+
                             <Link href="/returns" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Return Policy
                             </Link>
+
                             <Link href="/subscriptions" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Subscriptions
                             </Link>
+
                             <Link href="/account" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 My Account
                             </Link>
