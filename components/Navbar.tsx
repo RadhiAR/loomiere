@@ -12,7 +12,12 @@ import {
     registerUser,
     requestPasswordReset,
 } from "@/lib/auth";
-import { isAdminSessionActive, disableAdminSession } from "@/lib/admin-session";
+import {
+    isAdminSessionActive,
+    disableAdminSession,
+    enableAdminSession,
+    saveAdminKey,
+} from "@/lib/admin-session";
 import BrandLogo from "@/components/BrandLogo";
 
 type Props = {
@@ -21,6 +26,16 @@ type Props = {
 };
 
 type AuthView = "login" | "signup" | "forgot";
+
+type StoredAdminUser = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    password: string;
+    createdAt: string;
+};
 
 const SEARCH_SUGGESTIONS = [
     "Scarves",
@@ -32,6 +47,35 @@ const SEARCH_SUGGESTIONS = [
     "Blankets",
     "Jewellery",
 ];
+
+const ADMIN_USERS_KEY = "loomiere_admin_users_v1";
+
+const SOCIAL_LINKS = [
+    { label: "Instagram", href: "https://www.instagram.com", icon: "instagram" },
+    { label: "Facebook", href: "https://www.facebook.com", icon: "facebook" },
+    { label: "Twitter / X", href: "https://x.com", icon: "x" },
+    { label: "Pinterest", href: "https://www.pinterest.com", icon: "pinterest" },
+    { label: "TikTok", href: "https://www.tiktok.com", icon: "tiktok" },
+    { label: "YouTube", href: "https://www.youtube.com", icon: "youtube" },
+] as const;
+
+function readAdminUsers(): StoredAdminUser[] {
+    if (typeof window === "undefined") return [];
+
+    try {
+        const raw = window.localStorage.getItem(ADMIN_USERS_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeAdminUsers(users: StoredAdminUser[]) {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(ADMIN_USERS_KEY, JSON.stringify(users));
+}
 
 function MenuIcon() {
     return (
@@ -74,6 +118,80 @@ function CartIcon() {
     );
 }
 
+function InstagramIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" strokeWidth="1.8" />
+            <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
+            <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
+        </svg>
+    );
+}
+
+function FacebookIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M13.2 20v-7h2.4l.5-3h-2.9V8.3c0-.9.3-1.5 1.6-1.5H16V4.2c-.2 0-.9-.2-2-.2-2.5 0-4.1 1.5-4.1 4.4V10H7.5v3h2.4v7h3.3Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
+function XIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M5 4h3.6l4 5.4L17.1 4H19l-5.6 6.5L19.5 20H16l-4.2-5.7L6.8 20H5l5.9-6.9L5 4Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
+function PinterestIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M12.1 4.2c-4.2 0-6.3 3-6.3 5.5 0 1.5.6 2.9 1.8 3.5.2.1.3 0 .4-.2l.4-1.4c.1-.2 0-.3-.1-.5-.4-.5-.7-1.2-.7-2.2 0-2.8 2.1-5.3 5.5-5.3 3 0 4.6 1.8 4.6 4.3 0 3.2-1.4 5.9-3.5 5.9-1.2 0-2.1-1-1.8-2.3.3-1.5.9-3 1.1-4 .2-.9-.5-1.7-1.5-1.7-1.2 0-2.1 1.2-2.1 2.8 0 1 .3 1.7.3 1.7l-1.3 5.4c-.4 1.6-.1 3.7 0 3.9.1.1.2.1.3 0 .1-.1 1.2-1.6 1.6-3 .1-.4.7-2.8.7-2.8.4.7 1.5 1.3 2.8 1.3 3.7 0 6.3-3.4 6.3-7.9 0-3.4-2.9-6.5-7.3-6.5Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
+function TikTokIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M14.5 4c.3 1.9 1.4 3.3 3.3 3.8v2.4c-1.3 0-2.4-.4-3.3-1.1v5.6c0 2.9-2.3 5.1-5.3 5.1-2.8 0-5-2.1-5-4.8 0-3 2.4-5.2 5.6-4.8v2.4c-1.4-.2-2.8.7-2.8 2.2 0 1.2 1 2.1 2.2 2.1 1.3 0 2.3-.9 2.3-2.5V4h3Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
+function YouTubeIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M20.3 8.3c-.2-.9-.9-1.6-1.8-1.8C16.9 6 12 6 12 6s-4.9 0-6.5.5c-.9.2-1.6.9-1.8 1.8C3.2 10 3.2 12 3.2 12s0 2 .5 3.7c.2.9.9 1.6 1.8 1.8C7.1 18 12 18 12 18s4.9 0 6.5-.5c.9-.2 1.6-.9 1.8-1.8.5-1.7.5-3.7.5-3.7s0-2-.5-3.7ZM10.3 14.8v-5.6l4.8 2.8-4.8 2.8Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
+function SocialIcon({ icon }: { icon: (typeof SOCIAL_LINKS)[number]["icon"] }) {
+    if (icon === "instagram") return <InstagramIcon />;
+    if (icon === "facebook") return <FacebookIcon />;
+    if (icon === "x") return <XIcon />;
+    if (icon === "pinterest") return <PinterestIcon />;
+    if (icon === "tiktok") return <TikTokIcon />;
+    return <YouTubeIcon />;
+}
+
 export default function Navbar({ theme = "dark" }: Props) {
     const router = useRouter();
     const isDark = theme === "dark";
@@ -93,6 +211,10 @@ export default function Navbar({ theme = "dark" }: Props) {
     const [loginPassword, setLoginPassword] = useState("");
     const [loginError, setLoginError] = useState("");
 
+    const [adminLoginIdentifier, setAdminLoginIdentifier] = useState("");
+    const [adminLoginPassword, setAdminLoginPassword] = useState("");
+    const [adminLoginError, setAdminLoginError] = useState("");
+
     const [signupFirstName, setSignupFirstName] = useState("");
     const [signupLastName, setSignupLastName] = useState("");
     const [signupPhone, setSignupPhone] = useState("");
@@ -101,6 +223,14 @@ export default function Navbar({ theme = "dark" }: Props) {
     const [signupPassword, setSignupPassword] = useState("");
     const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
     const [signupError, setSignupError] = useState("");
+
+    const [adminSignupFirstName, setAdminSignupFirstName] = useState("");
+    const [adminSignupLastName, setAdminSignupLastName] = useState("");
+    const [adminSignupEmail, setAdminSignupEmail] = useState("");
+    const [adminSignupUsername, setAdminSignupUsername] = useState("");
+    const [adminSignupPassword, setAdminSignupPassword] = useState("");
+    const [adminSignupConfirmPassword, setAdminSignupConfirmPassword] = useState("");
+    const [adminSignupError, setAdminSignupError] = useState("");
 
     const [forgotEmail, setForgotEmail] = useState("");
     const [forgotMessage, setForgotMessage] = useState("");
@@ -166,6 +296,11 @@ export default function Navbar({ theme = "dark" }: Props) {
         setLoginIdentifier("");
         setLoginPassword("");
         setLoginError("");
+
+        setAdminLoginIdentifier("");
+        setAdminLoginPassword("");
+        setAdminLoginError("");
+
         setSignupFirstName("");
         setSignupLastName("");
         setSignupPhone("");
@@ -174,6 +309,15 @@ export default function Navbar({ theme = "dark" }: Props) {
         setSignupPassword("");
         setSignupConfirmPassword("");
         setSignupError("");
+
+        setAdminSignupFirstName("");
+        setAdminSignupLastName("");
+        setAdminSignupEmail("");
+        setAdminSignupUsername("");
+        setAdminSignupPassword("");
+        setAdminSignupConfirmPassword("");
+        setAdminSignupError("");
+
         setForgotEmail("");
         setForgotMessage("");
     }
@@ -190,7 +334,9 @@ export default function Navbar({ theme = "dark" }: Props) {
         setAuthView(view);
         setAuthOpen(true);
         setLoginError("");
+        setAdminLoginError("");
         setSignupError("");
+        setAdminSignupError("");
         setForgotMessage("");
     }
 
@@ -224,6 +370,40 @@ export default function Navbar({ theme = "dark" }: Props) {
         refreshAuthState();
         closeAuth();
         router.push("/account");
+    }
+
+    function handleAdminLogin() {
+        setAdminLoginError("");
+
+        if (!adminLoginIdentifier.trim() || !adminLoginPassword.trim()) {
+            setAdminLoginError("Please enter your admin username/email and password.");
+            return;
+        }
+
+        const admins = readAdminUsers();
+        const normalizedIdentifier = adminLoginIdentifier.trim().toLowerCase();
+
+        const admin = admins.find(
+            (item) =>
+                item.email.trim().toLowerCase() === normalizedIdentifier ||
+                item.username.trim().toLowerCase() === normalizedIdentifier
+        );
+
+        if (!admin) {
+            setAdminLoginError("No admin subscriber account found with that email or username.");
+            return;
+        }
+
+        if (admin.password !== adminLoginPassword) {
+            setAdminLoginError("Incorrect admin password.");
+            return;
+        }
+
+        enableAdminSession();
+        saveAdminKey(admin.id);
+        refreshAdminState();
+        closeAuth();
+        router.push("/upload-products");
     }
 
     function handleSignup() {
@@ -269,6 +449,65 @@ export default function Navbar({ theme = "dark" }: Props) {
         refreshAuthState();
         closeAuth();
         router.push("/account");
+    }
+
+    function handleAdminSignup() {
+        setAdminSignupError("");
+
+        if (
+            !adminSignupFirstName.trim() ||
+            !adminSignupLastName.trim() ||
+            !adminSignupEmail.trim() ||
+            !adminSignupUsername.trim() ||
+            !adminSignupPassword.trim() ||
+            !adminSignupConfirmPassword.trim()
+        ) {
+            setAdminSignupError("Please fill in all admin subscriber fields.");
+            return;
+        }
+
+        if (adminSignupPassword !== adminSignupConfirmPassword) {
+            setAdminSignupError("Admin passwords do not match.");
+            return;
+        }
+
+        if (adminSignupPassword.length < 6) {
+            setAdminSignupError("Admin password must be at least 6 characters.");
+            return;
+        }
+
+        const admins = readAdminUsers();
+        const normalizedEmail = adminSignupEmail.trim().toLowerCase();
+        const normalizedUsername = adminSignupUsername.trim().toLowerCase();
+
+        const emailExists = admins.some((admin) => admin.email.trim().toLowerCase() === normalizedEmail);
+        if (emailExists) {
+            setAdminSignupError("An admin subscriber account with this email already exists.");
+            return;
+        }
+
+        const usernameExists = admins.some((admin) => admin.username.trim().toLowerCase() === normalizedUsername);
+        if (usernameExists) {
+            setAdminSignupError("This admin username is already taken.");
+            return;
+        }
+
+        const nextAdmin: StoredAdminUser = {
+            id: `admin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            firstName: adminSignupFirstName.trim(),
+            lastName: adminSignupLastName.trim(),
+            email: normalizedEmail,
+            username: adminSignupUsername.trim(),
+            password: adminSignupPassword,
+            createdAt: new Date().toISOString(),
+        };
+
+        writeAdminUsers([...admins, nextAdmin]);
+        enableAdminSession();
+        saveAdminKey(nextAdmin.id);
+        refreshAdminState();
+        closeAuth();
+        router.push("/upload-products");
     }
 
     function handleForgotPassword() {
@@ -398,7 +637,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 </Link>
                             ) : null}
 
-                            {loggedIn ? (
+                            {adminActive ? (
                                 <Link
                                     href="/upload-products"
                                     onClick={() => setMenuOpen(false)}
@@ -408,9 +647,30 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 </Link>
                             ) : null}
 
+                            <div className="mt-4 px-4">
+                                <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-black/45">
+                                    Follow Loomiere
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                    {SOCIAL_LINKS.map((item) => (
+                                        <a
+                                            key={item.label}
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            aria-label={item.label}
+                                            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#efc5d7] bg-white text-black/70 transition hover:bg-[#ffe3ee] hover:text-black"
+                                        >
+                                            <SocialIcon icon={item.icon} />
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="my-3 border-t border-[#f2cddd]" />
 
-                            {!loggedIn ? (
+                            {!loggedIn && !adminActive ? (
                                 <button
                                     type="button"
                                     className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
@@ -430,6 +690,10 @@ export default function Navbar({ theme = "dark" }: Props) {
 
                             {loggedIn && currentName ? (
                                 <div className="mt-4 px-4 text-xs text-black/45">Signed in as {currentName}</div>
+                            ) : null}
+
+                            {!loggedIn && adminActive ? (
+                                <div className="mt-4 px-4 text-xs text-black/45">Signed in as subscriber admin</div>
                             ) : null}
                         </div>
                     </aside>
@@ -499,7 +763,7 @@ export default function Navbar({ theme = "dark" }: Props) {
 
             {authOpen && (
                 <div className="fixed inset-0 z-[5000] bg-black/35 backdrop-blur-[2px]">
-                    <div className="mx-auto mt-20 w-[92%] max-w-xl rounded-[30px] border border-[#f2cddd] bg-[#fff7fa] p-6 shadow-2xl">
+                    <div className="mx-auto mt-20 w-[92%] max-w-4xl rounded-[30px] border border-[#f2cddd] bg-[#fff7fa] p-6 shadow-2xl">
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <div className="text-xs uppercase tracking-[0.22em] text-black/45">Loomeira Account</div>
@@ -525,6 +789,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 onClick={() => {
                                     setAuthView("login");
                                     setLoginError("");
+                                    setAdminLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
                                     ? "bg-[#ef5f9a] text-white"
@@ -539,6 +804,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 onClick={() => {
                                     setAuthView("signup");
                                     setSignupError("");
+                                    setAdminSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
                                     ? "bg-[#ef5f9a] text-white"
@@ -564,107 +830,233 @@ export default function Navbar({ theme = "dark" }: Props) {
                         </div>
 
                         {authView === "login" && (
-                            <div className="mt-6 grid gap-4">
-                                <input
-                                    value={loginIdentifier}
-                                    onChange={(e) => setLoginIdentifier(e.target.value)}
-                                    placeholder="Username or Email"
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    type="password"
-                                    value={loginPassword}
-                                    onChange={(e) => setLoginPassword(e.target.value)}
-                                    placeholder="Password"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleLogin();
-                                    }}
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
+                            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                                <div className="rounded-[24px] border border-[#efc5d7] bg-white/70 p-5">
+                                    <div className="text-[11px] uppercase tracking-[0.22em] text-black/45">
+                                        Shopper Login
+                                    </div>
 
-                                {loginError ? <div className="text-sm text-[#c8487d]">{loginError}</div> : null}
+                                    <div className="mt-4 grid gap-4">
+                                        <input
+                                            value={loginIdentifier}
+                                            onChange={(e) => setLoginIdentifier(e.target.value)}
+                                            placeholder="Username or Email"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="password"
+                                            value={loginPassword}
+                                            onChange={(e) => setLoginPassword(e.target.value)}
+                                            placeholder="Password"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") handleLogin();
+                                            }}
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
 
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={handleLogin}
-                                        className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
-                                    >
-                                        Login
-                                    </button>
+                                        {loginError ? <div className="text-sm text-[#c8487d]">{loginError}</div> : null}
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setAuthView("forgot")}
-                                        className="text-sm text-black/55 underline underline-offset-4"
-                                    >
-                                        Forgot password?
-                                    </button>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={handleLogin}
+                                                className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
+                                            >
+                                                Login
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setAuthView("forgot")}
+                                                className="text-sm text-black/55 underline underline-offset-4"
+                                            >
+                                                Forgot password?
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-[24px] border border-[#efc5d7] bg-[#ffeef5] p-5">
+                                    <div className="text-[11px] uppercase tracking-[0.22em] text-black/45">
+                                        Login as Admin
+                                    </div>
+                                    <p className="mt-2 text-sm text-black/55">
+                                        Subscriber accounts for Loomiere sellers.
+                                    </p>
+
+                                    <div className="mt-4 grid gap-4">
+                                        <input
+                                            value={adminLoginIdentifier}
+                                            onChange={(e) => setAdminLoginIdentifier(e.target.value)}
+                                            placeholder="Admin Username or Email"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="password"
+                                            value={adminLoginPassword}
+                                            onChange={(e) => setAdminLoginPassword(e.target.value)}
+                                            placeholder="Admin Password"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") handleAdminLogin();
+                                            }}
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+
+                                        {adminLoginError ? (
+                                            <div className="text-sm text-[#c8487d]">{adminLoginError}</div>
+                                        ) : null}
+
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={handleAdminLogin}
+                                                className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
+                                            >
+                                                Login as Admin
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {authView === "signup" && (
-                            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                                <input
-                                    value={signupFirstName}
-                                    onChange={(e) => setSignupFirstName(e.target.value)}
-                                    placeholder="First Name"
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    value={signupLastName}
-                                    onChange={(e) => setSignupLastName(e.target.value)}
-                                    placeholder="Last Name"
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    value={signupPhone}
-                                    onChange={(e) => setSignupPhone(e.target.value)}
-                                    placeholder="Phone Number"
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    type="email"
-                                    value={signupEmail}
-                                    onChange={(e) => setSignupEmail(e.target.value)}
-                                    placeholder="Email"
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    value={signupUsername}
-                                    onChange={(e) => setSignupUsername(e.target.value)}
-                                    placeholder="Username"
-                                    className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    type="password"
-                                    value={signupPassword}
-                                    onChange={(e) => setSignupPassword(e.target.value)}
-                                    placeholder="Password"
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
-                                <input
-                                    type="password"
-                                    value={signupConfirmPassword}
-                                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                                    placeholder="Confirm Password"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleSignup();
-                                    }}
-                                    className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
-                                />
+                            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                                <div className="rounded-[24px] border border-[#efc5d7] bg-white/70 p-5">
+                                    <div className="text-[11px] uppercase tracking-[0.22em] text-black/45">
+                                        Shopper Sign Up
+                                    </div>
 
-                                {signupError ? <div className="sm:col-span-2 text-sm text-[#c8487d]">{signupError}</div> : null}
+                                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                        <input
+                                            value={signupFirstName}
+                                            onChange={(e) => setSignupFirstName(e.target.value)}
+                                            placeholder="First Name"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            value={signupLastName}
+                                            onChange={(e) => setSignupLastName(e.target.value)}
+                                            placeholder="Last Name"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            value={signupPhone}
+                                            onChange={(e) => setSignupPhone(e.target.value)}
+                                            placeholder="Phone Number"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="email"
+                                            value={signupEmail}
+                                            onChange={(e) => setSignupEmail(e.target.value)}
+                                            placeholder="Email"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            value={signupUsername}
+                                            onChange={(e) => setSignupUsername(e.target.value)}
+                                            placeholder="Username"
+                                            className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="password"
+                                            value={signupPassword}
+                                            onChange={(e) => setSignupPassword(e.target.value)}
+                                            placeholder="Password"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="password"
+                                            value={signupConfirmPassword}
+                                            onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                                            placeholder="Confirm Password"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") handleSignup();
+                                            }}
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
 
-                                <div className="sm:col-span-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleSignup}
-                                        className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
-                                    >
-                                        Create Profile
-                                    </button>
+                                        {signupError ? <div className="sm:col-span-2 text-sm text-[#c8487d]">{signupError}</div> : null}
+
+                                        <div className="sm:col-span-2">
+                                            <button
+                                                type="button"
+                                                onClick={handleSignup}
+                                                className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
+                                            >
+                                                Create Shopper Profile
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-[24px] border border-[#efc5d7] bg-[#ffeef5] p-5">
+                                    <div className="text-[11px] uppercase tracking-[0.22em] text-black/45">
+                                        Sign Up as Admin
+                                    </div>
+                                    <p className="mt-2 text-sm text-black/55">
+                                        Use this for Loomiere subscriber seller accounts.
+                                    </p>
+
+                                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                        <input
+                                            value={adminSignupFirstName}
+                                            onChange={(e) => setAdminSignupFirstName(e.target.value)}
+                                            placeholder="First Name"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            value={adminSignupLastName}
+                                            onChange={(e) => setAdminSignupLastName(e.target.value)}
+                                            placeholder="Last Name"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="email"
+                                            value={adminSignupEmail}
+                                            onChange={(e) => setAdminSignupEmail(e.target.value)}
+                                            placeholder="Email"
+                                            className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            value={adminSignupUsername}
+                                            onChange={(e) => setAdminSignupUsername(e.target.value)}
+                                            placeholder="Admin Username"
+                                            className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="password"
+                                            value={adminSignupPassword}
+                                            onChange={(e) => setAdminSignupPassword(e.target.value)}
+                                            placeholder="Password"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="password"
+                                            value={adminSignupConfirmPassword}
+                                            onChange={(e) => setAdminSignupConfirmPassword(e.target.value)}
+                                            placeholder="Confirm Password"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") handleAdminSignup();
+                                            }}
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+
+                                        {adminSignupError ? (
+                                            <div className="sm:col-span-2 text-sm text-[#c8487d]">{adminSignupError}</div>
+                                        ) : null}
+
+                                        <div className="sm:col-span-2">
+                                            <button
+                                                type="button"
+                                                onClick={handleAdminSignup}
+                                                className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
+                                            >
+                                                Create Admin Account
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
