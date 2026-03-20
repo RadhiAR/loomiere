@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import { readAdminKey } from "@/lib/admin-session";
 
 const categories = [
     { label: "home decor", value: "home" },
@@ -11,7 +12,9 @@ const categories = [
     { label: "jewellery", value: "jewellery" },
     { label: "apparel", value: "apparel" },
 ];
+
 const discountTypes = ["amount", "percentage"];
+const ADMIN_PRODUCT_USAGE_KEY = "loomiere_admin_product_upload_counts_v1";
 
 function getCategoryRedirect(category: string) {
     switch (category) {
@@ -25,6 +28,29 @@ function getCategoryRedirect(category: string) {
             return "/shop/apparel";
         default:
             return "/shop";
+    }
+}
+
+function incrementAdminUsageCount() {
+    if (typeof window === "undefined") return;
+
+    const currentAdminId = readAdminKey();
+    if (!currentAdminId) return;
+
+    try {
+        const raw = window.localStorage.getItem(ADMIN_PRODUCT_USAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        const next = parsed && typeof parsed === "object" ? parsed : {};
+
+        next[currentAdminId] = Number(next[currentAdminId] || 0) + 1;
+        window.localStorage.setItem(ADMIN_PRODUCT_USAGE_KEY, JSON.stringify(next));
+    } catch {
+        window.localStorage.setItem(
+            ADMIN_PRODUCT_USAGE_KEY,
+            JSON.stringify({
+                [currentAdminId]: 1,
+            })
+        );
     }
 }
 
@@ -135,6 +161,8 @@ export default function UploadProductsPage() {
             if (!res.ok) {
                 throw new Error(data.error || "Failed to save product");
             }
+
+            incrementAdminUsageCount();
 
             alert("Product uploaded successfully");
             router.push(getCategoryRedirect(form.category));

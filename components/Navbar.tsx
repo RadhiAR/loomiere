@@ -629,11 +629,11 @@ export default function Navbar({ theme = "dark" }: Props) {
 
                             {adminActive ? (
                                 <Link
-                                    href="/admin/custom-requests"
+                                    href="/my-dashboard"
                                     onClick={() => setMenuOpen(false)}
                                     className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
                                 >
-                                    Dashboard
+                                    My Dashboard
                                 </Link>
                             ) : null}
 
