@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import CategorySection from "@/components/CategorySection";
+import RecentCollectionSection from "@/components/RecentCollectionSection";
 
 export default function HomePage() {
     return (
@@ -18,7 +19,7 @@ export default function HomePage() {
                 secondaryCtaHref="/about"
                 heroImageUrl="/hero.jpg"
             />
-
+            <RecentCollectionSection />
             {/* SECTION 1 — Apparel */}
             <CategorySection
                 id="apparel"
