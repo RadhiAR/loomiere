@@ -638,21 +638,25 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 Loomeira AI
                             </button>
 
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => requireProfileAccess("/loomeira-learning")}
-                            >
-                                Loomeira Learning
-                            </button>
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                    onClick={() => requireProfileAccess("/loomeira-learning")}
+                                >
+                                    Loomeira Learning
+                                </button>
+                            ) : null}
 
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => requireProfileAccess("/loomeira-milan")}
-                            >
-                                Loomeira - MILAN
-                            </button>
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                    onClick={() => requireProfileAccess("/loomeira-milan")}
+                                >
+                                    Loomeira - MILAN
+                                </button>
+                            ) : null}
 
                             <button
                                 type="button"
@@ -694,29 +698,35 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 My Account
                             </button>
 
-                            <button
-                                type="button"
-                                onClick={() => requireProfileAccess("/customize/requests")}
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                            >
-                                Submitted Requests
-                            </button>
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    onClick={() => requireProfileAccess("/customize/requests")}
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                >
+                                    Submitted Requests
+                                </button>
+                            ) : null}
 
-                            <button
-                                type="button"
-                                onClick={() => requireProfileAccess("/my-dashboard")}
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                            >
-                                My Dashboard
-                            </button>
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    onClick={() => requireProfileAccess("/my-dashboard")}
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                >
+                                    My Dashboard
+                                </button>
+                            ) : null}
 
-                            <button
-                                type="button"
-                                onClick={() => requireProfileAccess("/upload-products")}
-                                className="block w-full rounded-2xl border border-[#efc5d7] bg-white px-5 py-4 text-left text-[13px] uppercase tracking-[0.22em] text-black/75 transition hover:bg-[#ffe3ee]"
-                            >
-                                Upload your products
-                            </button>
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    onClick={() => requireProfileAccess("/upload-products")}
+                                    className="block w-full rounded-2xl border border-[#efc5d7] bg-white px-5 py-4 text-left text-[13px] uppercase tracking-[0.22em] text-black/75 transition hover:bg-[#ffe3ee]"
+                                >
+                                    Upload your products
+                                </button>
+                            ) : null}
 
                             <div className="mt-4 px-4">
                                 <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-black/45">
