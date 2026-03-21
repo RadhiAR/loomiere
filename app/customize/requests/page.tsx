@@ -30,6 +30,8 @@ type AdminUserOption = {
     value: string;
 };
 
+type AssigneeFilterValue = "all" | "me" | "unassigned" | string;
+
 const ADMIN_USERS_KEY = "loomiere_admin_users_v1";
 
 export default function CustomizeRequestsPage() {
@@ -43,6 +45,8 @@ export default function CustomizeRequestsPage() {
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [savingAssigneeId, setSavingAssigneeId] = useState<string>("");
     const [adminAssignees, setAdminAssignees] = useState<AdminUserOption[]>([]);
+    const [currentAdminValue, setCurrentAdminValue] = useState("");
+    const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilterValue>("all");
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -61,9 +65,18 @@ export default function CustomizeRequestsPage() {
                 }))
                 : [];
 
-            setAdminAssignees(options.filter((item) => item.value));
+            const cleanedOptions = options.filter((item) => item.value);
+            setAdminAssignees(cleanedOptions);
+
+            const activeAdminKey = window.localStorage.getItem("loomiere_admin_key") || "";
+            if (activeAdminKey && Array.isArray(parsed)) {
+                const activeAdmin = parsed.find((item: any) => item?.id === activeAdminKey);
+                const activeValue = activeAdmin?.username || activeAdmin?.email || "";
+                setCurrentAdminValue(activeValue);
+            }
         } catch {
             setAdminAssignees([]);
+            setCurrentAdminValue("");
         }
     }, []);
 
@@ -145,6 +158,22 @@ export default function CustomizeRequestsPage() {
         return isAdmin ? "Submitted Requests" : "Your Submitted Requests";
     }, [isAdmin]);
 
+    const filteredItems = useMemo(() => {
+        if (!isAdmin) return items;
+
+        if (assigneeFilter === "all") return items;
+
+        if (assigneeFilter === "me") {
+            return items.filter((item) => (item.assignee || "") === currentAdminValue);
+        }
+
+        if (assigneeFilter === "unassigned") {
+            return items.filter((item) => !(item.assignee || "").trim());
+        }
+
+        return items.filter((item) => (item.assignee || "") === assigneeFilter);
+    }, [items, isAdmin, assigneeFilter, currentAdminValue]);
+
     return (
         <main className="min-h-screen bg-[#f9eff4] text-black">
             <section className="mx-auto max-w-[1500px] px-4 pb-16 pt-6 sm:px-6 lg:px-8">
@@ -182,31 +211,53 @@ export default function CustomizeRequestsPage() {
                     {isAdmin && !loading && items.length ? (
                         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[#efc5d7] bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             <div className="text-sm text-black/60">
-                                Total requests: <span className="font-semibold text-black/85">{items.length}</span>
+                                Total requests: <span className="font-semibold text-black/85">{filteredItems.length}</span>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode("grid")}
-                                    className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "grid"
-                                            ? "bg-[#ef5f9a] text-white"
-                                            : "border border-[#efc5d7] bg-white text-black/65"
-                                        }`}
-                                >
-                                    Grid View
-                                </button>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                        Assigned to
+                                    </label>
+                                    <select
+                                        value={assigneeFilter}
+                                        onChange={(e) => setAssigneeFilter(e.target.value)}
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2 text-xs uppercase tracking-[0.16em] text-black/65 outline-none focus:border-[#d86b98]"
+                                    >
+                                        <option value="all">All</option>
+                                        <option value="me">Assigned to me</option>
+                                        <option value="unassigned">Unassigned</option>
+                                        {adminAssignees.map((admin) => (
+                                            <option key={admin.value} value={admin.value}>
+                                                {admin.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode("list")}
-                                    className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "list"
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode("grid")}
+                                        className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "grid"
                                             ? "bg-[#ef5f9a] text-white"
                                             : "border border-[#efc5d7] bg-white text-black/65"
-                                        }`}
-                                >
-                                    List View
-                                </button>
+                                            }`}
+                                    >
+                                        Grid View
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode("list")}
+                                        className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "list"
+                                            ? "bg-[#ef5f9a] text-white"
+                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                            }`}
+                                    >
+                                        List View
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ) : null}
@@ -215,9 +266,14 @@ export default function CustomizeRequestsPage() {
                         <div className="rounded-[28px] border border-[#efc5d7] bg-white/75 p-10 text-center text-black/55 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             Loading requests...
                         </div>
-                    ) : pageMessage && !items.length ? (
+                    ) : pageMessage && !filteredItems.length ? (
                         <div className="rounded-[28px] border border-[#efc5d7] bg-white/75 p-10 text-center text-black/55 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             {pageMessage}
+                        </div>
+
+                    ) : filteredItems.length === 0 ? (
+                        <div className="rounded-[28px] border border-[#efc5d7] bg-white/75 p-10 text-center text-black/55 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+                            No requests found for this assignee filter.
                         </div>
                     ) : (
                         <div
@@ -227,7 +283,8 @@ export default function CustomizeRequestsPage() {
                                     : "grid gap-4"
                             }
                         >
-                            {items.map((item) => (
+                            {filteredItems.map((item) => (
+
                                 <div
                                     key={item.request_id || Math.random()}
                                     className={`rounded-[24px] border border-[#efc5d7] bg-white/85 shadow-[0_14px_34px_rgba(0,0,0,0.05)] ${viewMode === "list" ? "p-4" : "p-5"
