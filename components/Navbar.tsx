@@ -615,6 +615,13 @@ export default function Navbar({ theme = "dark" }: Props) {
                             <Link href="/loomeira-learning" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Loomeira Learning
                             </Link>
+                            <Link
+                                href="/loomeira-milan"
+                                className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => setMenuOpen(false)}
+                            >
+                                Loomeira - MILAN
+                            </Link>
 
                             <Link href="/customize" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
                                 Customize
@@ -637,13 +644,23 @@ export default function Navbar({ theme = "dark" }: Props) {
                             </Link>
 
                             {adminActive ? (
-                                <Link
-                                    href="/my-dashboard"
-                                    onClick={() => setMenuOpen(false)}
-                                    className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                >
-                                    My Dashboard
-                                </Link>
+                                <>
+                                    <Link
+                                        href="/customize/requests"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                    >
+                                        Submitted Requests
+                                    </Link>
+
+                                    <Link
+                                        href="/my-dashboard"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                    >
+                                        My Dashboard
+                                    </Link>
+                                </>
                             ) : null}
 
                             {adminActive ? (
