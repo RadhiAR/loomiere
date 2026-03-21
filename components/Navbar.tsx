@@ -206,6 +206,7 @@ export default function Navbar({ theme = "dark" }: Props) {
     const [loggedIn, setLoggedIn] = useState(false);
     const [adminActive, setAdminActive] = useState(false);
     const [currentName, setCurrentName] = useState("");
+    const [accessWarning, setAccessWarning] = useState("");
 
     const [loginIdentifier, setLoginIdentifier] = useState("");
     const [loginPassword, setLoginPassword] = useState("");
@@ -328,7 +329,7 @@ export default function Navbar({ theme = "dark" }: Props) {
         setSearchOpen(true);
     }
 
-    function openAuth(view: AuthView) {
+    function openAuth(view: AuthView, warning = "") {
         setMenuOpen(false);
         setSearchOpen(false);
         setAuthView(view);
@@ -338,11 +339,31 @@ export default function Navbar({ theme = "dark" }: Props) {
         setSignupError("");
         setAdminSignupError("");
         setForgotMessage("");
+        setAccessWarning(warning);
     }
 
     function closeAuth() {
         setAuthOpen(false);
+        setAccessWarning("");
         resetAuthForms();
+    }
+
+    function requireProfileAccess(path: string) {
+        if (loggedIn || adminActive) {
+            setMenuOpen(false);
+            router.push(path);
+            return;
+        }
+
+        openAuth(
+            "login",
+            "This page can be accessed only when logged in. Please create a profile or log in first. Continue as guest cannot access this page."
+        );
+    }
+
+    function goPublic(path: string) {
+        setMenuOpen(false);
+        router.push(path);
     }
 
     function submitSearch(term?: string) {
@@ -525,6 +546,7 @@ export default function Navbar({ theme = "dark" }: Props) {
         disableAdminSession();
         refreshAuthState();
         refreshAdminState();
+        setAccessWarning("");
         setMenuOpen(false);
         router.push("/");
     }
@@ -608,70 +630,93 @@ export default function Navbar({ theme = "dark" }: Props) {
                         </div>
 
                         <div className="flex flex-col px-3 py-3">
-                            <Link href="/loomiere-ai" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => requireProfileAccess("/loomiere-ai")}
+                            >
                                 Loomeira AI
-                            </Link>
+                            </button>
 
-                            <Link href="/loomeira-learning" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => requireProfileAccess("/loomeira-learning")}
+                            >
                                 Loomeira Learning
-                            </Link>
-                            <Link
-                                href="/loomeira-milan"
-                                className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => setMenuOpen(false)}
+                            </button>
+
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => requireProfileAccess("/loomeira-milan")}
                             >
                                 Loomeira - MILAN
-                            </Link>
+                            </button>
 
-                            <Link href="/customize" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => requireProfileAccess("/customize")}
+                            >
                                 Customize
-                            </Link>
+                            </button>
 
-                            <Link href="/contact" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => goPublic("/contact")}
+                            >
                                 Contact
-                            </Link>
+                            </button>
 
-                            <Link href="/returns" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => goPublic("/returns")}
+                            >
                                 Return Policy
-                            </Link>
+                            </button>
 
-                            <Link href="/subscriptions" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => goPublic("/subscriptions")}
+                            >
                                 Subscriptions
-                            </Link>
+                            </button>
 
-                            <Link href="/account" className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]" onClick={() => setMenuOpen(false)}>
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => requireProfileAccess("/account")}
+                            >
                                 My Account
-                            </Link>
+                            </button>
 
-                            {adminActive ? (
-                                <>
-                                    <Link
-                                        href="/customize/requests"
-                                        onClick={() => setMenuOpen(false)}
-                                        className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                    >
-                                        Submitted Requests
-                                    </Link>
+                            <button
+                                type="button"
+                                onClick={() => requireProfileAccess("/customize/requests")}
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                            >
+                                Submitted Requests
+                            </button>
 
-                                    <Link
-                                        href="/my-dashboard"
-                                        onClick={() => setMenuOpen(false)}
-                                        className="rounded-xl px-4 py-3 text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                    >
-                                        My Dashboard
-                                    </Link>
-                                </>
-                            ) : null}
+                            <button
+                                type="button"
+                                onClick={() => requireProfileAccess("/my-dashboard")}
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                            >
+                                My Dashboard
+                            </button>
 
-                            {adminActive ? (
-                                <Link
-                                    href="/upload-products"
-                                    onClick={() => setMenuOpen(false)}
-                                    className="block w-full rounded-2xl border border-[#efc5d7] bg-white px-5 py-4 text-left text-[13px] uppercase tracking-[0.22em] text-black/75 transition hover:bg-[#ffe3ee]"
-                                >
-                                    Upload your products
-                                </Link>
-                            ) : null}
+                            <button
+                                type="button"
+                                onClick={() => requireProfileAccess("/upload-products")}
+                                className="block w-full rounded-2xl border border-[#efc5d7] bg-white px-5 py-4 text-left text-[13px] uppercase tracking-[0.22em] text-black/75 transition hover:bg-[#ffe3ee]"
+                            >
+                                Upload your products
+                            </button>
 
                             <div className="mt-4 px-4">
                                 <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-black/45">
@@ -809,6 +854,12 @@ export default function Navbar({ theme = "dark" }: Props) {
                             </button>
                         </div>
 
+                        {accessWarning ? (
+                            <div className="mt-5 rounded-2xl border border-[#efc5d7] bg-[#fff4f8] px-4 py-3 text-sm text-[#b4235f]">
+                                {accessWarning}
+                            </div>
+                        ) : null}
+
                         <div className="mt-5 flex flex-wrap gap-2">
                             <button
                                 type="button"
@@ -818,8 +869,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Login
@@ -833,8 +884,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Sign Up
@@ -847,8 +898,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setForgotMessage("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "forgot"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Forgot Password
