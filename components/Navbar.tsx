@@ -669,14 +669,6 @@ export default function Navbar({ theme = "dark" }: Props) {
                             <button
                                 type="button"
                                 className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => goPublic("/contact")}
-                            >
-                                Contact
-                            </button>
-
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
                                 onClick={() => goPublic("/returns")}
                             >
                                 Return Policy
@@ -776,6 +768,55 @@ export default function Navbar({ theme = "dark" }: Props) {
                             {!loggedIn && adminActive ? (
                                 <div className="mt-4 px-4 text-xs text-black/45">Signed in as subscriber admin</div>
                             ) : null}
+
+                            <div className="mt-5 px-4">
+                                <div className="rounded-[22px] border border-[#efc5d7] bg-[#ffe9f2] p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.22em] text-black/45">
+                                        Contact Loomière
+                                    </div>
+
+                                    <div className="mt-3 text-sm leading-7 text-black/80">
+                                        <div>
+                                            Email: <span className="font-semibold">hello@loomiere.com</span>
+                                        </div>
+                                        <div className="mt-1">
+                                            WhatsApp/Text: <span className="font-semibold">xxx-xxx-xxxx</span>
+                                        </div>
+                                        <div className="mt-2 text-xs text-black/55">
+                                            Feel free to email us or send a WhatsApp message anytime.
+                                        </div>
+                                    </div>
+
+                                    <form className="mt-5 grid gap-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Your name"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="email"
+                                            placeholder="you@email.com"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <input
+                                            type="tel"
+                                            placeholder="(xxx) xxx-xxxx"
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <textarea
+                                            rows={4}
+                                            placeholder="Tell us what you’re looking for — product questions, custom requests, pricing, timeline, etc."
+                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center rounded-full bg-[#e84a93] px-5 py-3 text-xs uppercase tracking-[0.18em] text-white transition hover:bg-[#d63c7f]"
+                                        >
+                                            Submit
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </aside>
                 </div>
