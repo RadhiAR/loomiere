@@ -236,6 +236,14 @@ export default function Navbar({ theme = "dark" }: Props) {
     const [forgotEmail, setForgotEmail] = useState("");
     const [forgotMessage, setForgotMessage] = useState("");
 
+    const [contactName, setContactName] = useState("");
+    const [contactEmail, setContactEmail] = useState("");
+    const [contactPhone, setContactPhone] = useState("");
+    const [contactQuery, setContactQuery] = useState("");
+    const [contactSubmitting, setContactSubmitting] = useState(false);
+    const [contactMessage, setContactMessage] = useState("");
+    const [contactError, setContactError] = useState("");
+
     function refreshAuthState() {
         const user = getCurrentUser();
         setLoggedIn(isLoggedIn());
@@ -551,6 +559,44 @@ export default function Navbar({ theme = "dark" }: Props) {
         router.push("/");
     }
 
+    async function handleContactSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setContactSubmitting(true);
+        setContactError("");
+        setContactMessage("");
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: contactName,
+                    email: contactEmail,
+                    phone: contactPhone,
+                    query: contactQuery,
+                }),
+            });
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                throw new Error(data?.message || "Failed to submit contact request.");
+            }
+
+            setContactName("");
+            setContactEmail("");
+            setContactPhone("");
+            setContactQuery("");
+            setContactMessage(data?.message || "Contact request submitted successfully.");
+        } catch (error: any) {
+            setContactError(error?.message || "Something went wrong. Try again.");
+        } finally {
+            setContactSubmitting(false);
+        }
+    }
+
     const pillBase =
         "inline-flex items-center gap-2 rounded-full px-7 py-3 text-[12px] uppercase tracking-[0.22em] transition";
 
@@ -787,32 +833,58 @@ export default function Navbar({ theme = "dark" }: Props) {
                                         </div>
                                     </div>
 
-                                    <form className="mt-5 grid gap-3">
+                                    <form onSubmit={handleContactSubmit} className="mt-5 grid gap-3">
                                         <input
                                             type="text"
+                                            value={contactName}
+                                            onChange={(e) => setContactName(e.target.value)}
                                             placeholder="Your name"
+                                            required
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
                                         <input
                                             type="email"
+                                            value={contactEmail}
+                                            onChange={(e) => setContactEmail(e.target.value)}
                                             placeholder="you@email.com"
+                                            required
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
                                         <input
                                             type="tel"
+                                            value={contactPhone}
+                                            onChange={(e) => setContactPhone(e.target.value)}
                                             placeholder="(xxx) xxx-xxxx"
+                                            required
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
                                         <textarea
                                             rows={4}
+                                            value={contactQuery}
+                                            onChange={(e) => setContactQuery(e.target.value)}
                                             placeholder="Tell us what you’re looking for — product questions, custom requests, pricing, timeline, etc."
+                                            required
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
+
+                                        {contactError ? (
+                                            <div className="rounded-xl border border-[#efc5d7] bg-white/80 p-3 text-sm text-[#c8487d]">
+                                                {contactError}
+                                            </div>
+                                        ) : null}
+
+                                        {contactMessage ? (
+                                            <div className="rounded-xl border border-[#efc5d7] bg-white/80 p-3 text-sm text-black/70">
+                                                {contactMessage}
+                                            </div>
+                                        ) : null}
+
                                         <button
-                                            type="button"
-                                            className="inline-flex items-center justify-center rounded-full bg-[#e84a93] px-5 py-3 text-xs uppercase tracking-[0.18em] text-white transition hover:bg-[#d63c7f]"
+                                            type="submit"
+                                            disabled={contactSubmitting}
+                                            className="inline-flex items-center justify-center rounded-full bg-[#e84a93] px-5 py-3 text-xs uppercase tracking-[0.18em] text-white transition hover:bg-[#d63c7f] disabled:opacity-60"
                                         >
-                                            Submit
+                                            {contactSubmitting ? "Submitting..." : "Submit"}
                                         </button>
                                     </form>
                                 </div>
@@ -920,8 +992,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Login
@@ -935,8 +1007,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Sign Up
@@ -949,8 +1021,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setForgotMessage("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "forgot"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Forgot Password
