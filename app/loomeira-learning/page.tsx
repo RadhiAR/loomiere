@@ -57,102 +57,11 @@ function getMonthMatrix(viewDate: Date) {
     return days;
 }
 
-function buildPlan(
-    topic: string,
-    level: string,
-    capacity: string,
-    duration: string,
-    goal: string
-): PlanWeek[] {
-    const weeks = Math.max(1, Number(duration) || 4);
-    const hours = Math.max(1, Number(capacity) || 3);
-    const cleanTopic = topic.trim() || "crochet";
-    const cleanGoal = goal.trim() || `build consistency in ${cleanTopic}`;
-
-    const beginnerPlan = [
-        "Learn tools, materials, and basic terms",
-        "Practice foundation stitches and hand control",
-        "Repeat small patterns and improve consistency",
-        "Create one simple finished project",
-    ];
-
-    const intermediatePlan = [
-        "Refresh technique and identify weak areas",
-        "Work on shaping, tension, and pattern reading",
-        "Build speed with guided mini-projects",
-        "Complete a polished project with variations",
-    ];
-
-    const advancedPlan = [
-        "Define a focused outcome and benchmark current skill",
-        "Practice complex patterns and precision work",
-        "Refine finishing, styling, and customization",
-        "Complete a showcase-level project and review gaps",
-    ];
-
-    const source =
-        level === "Intermediate"
-            ? intermediatePlan
-            : level === "Advanced"
-                ? advancedPlan
-                : beginnerPlan;
-
-    return Array.from({ length: weeks }, (_, index) => {
-        const focus = source[index % source.length];
-        return {
-            week: index + 1,
-            title: `Week ${index + 1}`,
-            focus,
-            goal:
-                hours <= 2
-                    ? `Light pace: spend about ${hours} hour${hours === 1 ? "" : "s"} on ${cleanTopic} and keep the target realistic.`
-                    : `Steady pace: spend about ${hours} hours on ${cleanTopic} and move toward ${cleanGoal}.`,
-        };
-    });
-}
-
-function generateAssistantReply(
-    question: string,
-    planInputs: {
-        topic: string;
-        level: string;
-        capacity: string;
-        duration: string;
-        goal: string;
-    }
-) {
-    const q = question.trim().toLowerCase();
-    const topic = planInputs.topic.trim() || "crochet";
-    const level = planInputs.level || "Beginner";
-    const capacity = Number(planInputs.capacity) || 3;
-    const duration = Number(planInputs.duration) || 4;
-    const goal = planInputs.goal.trim() || `improve at ${topic}`;
-
-    if (!q) {
-        return "Tell me what you want to learn, what feels difficult, or how much time you have each week, and I’ll help you shape a learning routine.";
-    }
-
-    if (q.includes("plan") || q.includes("schedule")) {
-        return `Based on your current settings, I’d recommend a ${duration}-week ${level.toLowerCase()} plan for ${topic} with about ${capacity} hour${capacity === 1 ? "" : "s"} per week, focused on ${goal}.`;
-    }
-
-    if (q.includes("behind") || q.includes("missed") || q.includes("skip")) {
-        return `If you miss a day, don’t restart everything. Move the unfinished ${topic} task to the next open day, keep only one priority goal per session, and protect consistency over perfection.`;
-    }
-
-    if (q.includes("beginner")) {
-        return `For a beginner in ${topic}, start with fundamentals first, repeat the same technique a few times, and avoid jumping into a large project too early.`;
-    }
-
-    if (q.includes("time") || q.includes("busy")) {
-        return `Since time is limited, use short sessions. Even ${capacity} focused hour${capacity === 1 ? "" : "s"} a week can work well if each session has one clear task and one measurable outcome.`;
-    }
-
-    if (q.includes("motivation") || q.includes("consistent")) {
-        return `To stay consistent, pick tiny wins: one stitch, one pattern section, or one finished sample. Visible progress makes it much easier to continue with ${topic}.`;
-    }
-
-    return `For ${topic}, I’d focus on one skill at a time, match the workload to your ${level.toLowerCase()} level, and keep the weekly target aligned with your goal: ${goal}.`;
+function addDaysToDateKey(dateKey: string, daysToAdd: number) {
+    const [year, month, day] = dateKey.split("-").map(Number);
+    const date = new Date(year, (month || 1) - 1, day || 1);
+    date.setDate(date.getDate() + daysToAdd);
+    return formatDateKey(date);
 }
 
 export default function LoomeiraLearningPage() {
@@ -178,6 +87,10 @@ export default function LoomeiraLearningPage() {
             text: "Hi, I’m your Loomeira learning assistant. Ask me about planning your learning, staying consistent, or breaking a skill into smaller goals.",
         },
     ]);
+
+    const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+    const [isSendingChat, setIsSendingChat] = useState(false);
+    const [isAddingPlanToTracker, setIsAddingPlanToTracker] = useState(false);
 
     useEffect(() => {
         const stored = window.localStorage.getItem("loomeira-learning-entries");
@@ -244,45 +157,159 @@ export default function LoomeiraLearningPage() {
         setEntries((prev) => prev.filter((entry) => entry.id !== id));
     }
 
-    function handleGeneratePlan() {
-        const nextPlan = buildPlan(topic, level, capacity, duration, goal);
-        setPlan(nextPlan);
+    async function handleGeneratePlan() {
+        if (!topic.trim()) {
+            setChatMessages((prev) => [
+                ...prev,
+                {
+                    id: `assistant-plan-missing-topic-${Date.now()}`,
+                    role: "assistant",
+                    text: "Plan generation failed: Please enter what you want to learn first.",
+                },
+            ]);
+            return;
+        }
+
+        setIsGeneratingPlan(true);
+
+        try {
+            const response = await fetch("/api/loomeira-learning", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    mode: "plan",
+                    topic,
+                    level,
+                    capacity,
+                    duration,
+                    goal,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data?.error || "Failed to generate plan.");
+            }
+
+            const nextPlan: PlanWeek[] = Array.isArray(data.plan) ? data.plan : [];
+            setPlan(nextPlan);
+
+            setChatMessages((prev) => [
+                ...prev,
+                {
+                    id: `assistant-plan-${Date.now()}`,
+                    role: "assistant",
+                    text: `I created a ${nextPlan.length}-week learning plan for ${topic}. Review it below, and if it looks good, click "Add AI plan to tracker."`,
+                },
+            ]);
+        } catch (error) {
+            console.error("PLAN ERROR:", error);
+
+            setChatMessages((prev) => [
+                ...prev,
+                {
+                    id: `assistant-plan-error-${Date.now()}`,
+                    role: "assistant",
+                    text: `Plan generation failed: ${error instanceof Error ? error.message : "Unknown error"
+                        }`,
+                },
+            ]);
+        } finally {
+            setIsGeneratingPlan(false);
+        }
+    }
+
+    function handleAddPlanToTracker() {
+        if (!plan.length) return;
+
+        setIsAddingPlanToTracker(true);
+
+        const newEntries: LearningEntry[] = plan.map((item, index) => ({
+            id: `plan-${item.week}-${Date.now()}-${index}`,
+            date: addDaysToDateKey(selectedDate, index * 7),
+            title: item.focus,
+            notes: item.goal,
+        }));
+
+        setEntries((prev) => [...prev, ...newEntries]);
 
         setChatMessages((prev) => [
             ...prev,
             {
-                id: `assistant-plan-${Date.now()}`,
+                id: `assistant-tracker-${Date.now()}`,
                 role: "assistant",
-                text: `I created a ${nextPlan.length}-week learning plan for ${topic}. You can use it as your base and then add date-specific goals in your calendar.`,
+                text: "Done — I added your AI plan to the tracker starting from the selected date.",
             },
         ]);
+
+        setIsAddingPlanToTracker(false);
     }
 
-    function handleSendChat(e: FormEvent) {
+    async function handleSendChat(e: FormEvent) {
         e.preventDefault();
 
         if (!chatInput.trim()) return;
 
+        const userText = chatInput.trim();
+
         const userMessage: ChatMessage = {
             id: `user-${Date.now()}`,
             role: "user",
-            text: chatInput.trim(),
+            text: userText,
         };
 
-        const assistantMessage: ChatMessage = {
-            id: `assistant-${Date.now() + 1}`,
-            role: "assistant",
-            text: generateAssistantReply(chatInput, {
-                topic,
-                level,
-                capacity,
-                duration,
-                goal,
-            }),
-        };
-
-        setChatMessages((prev) => [...prev, userMessage, assistantMessage]);
+        setChatMessages((prev) => [...prev, userMessage]);
         setChatInput("");
+        setIsSendingChat(true);
+
+        try {
+            const response = await fetch("/api/loomeira-learning", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    mode: "chat",
+                    question: userText,
+                    topic,
+                    level,
+                    capacity,
+                    duration,
+                    goal,
+                    plan,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data?.error || "Failed to get assistant reply.");
+            }
+
+            const assistantMessage: ChatMessage = {
+                id: `assistant-${Date.now() + 1}`,
+                role: "assistant",
+                text: data.reply || "Sorry, I couldn't respond right now.",
+            };
+
+            setChatMessages((prev) => [...prev, assistantMessage]);
+        } catch (error) {
+            console.error("CHAT ERROR:", error);
+
+            const assistantMessage: ChatMessage = {
+                id: `assistant-error-${Date.now() + 1}`,
+                role: "assistant",
+                text: `Chat failed: ${error instanceof Error ? error.message : "Unknown error"
+                    }`,
+            };
+
+            setChatMessages((prev) => [...prev, assistantMessage]);
+        } finally {
+            setIsSendingChat(false);
+        }
     }
 
     return (
@@ -377,8 +404,8 @@ export default function LoomeiraLearningPage() {
                                         type="button"
                                         onClick={() => setSelectedDate(dateKey)}
                                         className={`min-h-[88px] rounded-[20px] border p-3 text-left transition ${isSelected
-                                                ? "border-[#ea4c97] bg-[#ffe9f2]"
-                                                : "border-black/8 bg-[#fffbfd] hover:bg-[#fff1f6]"
+                                            ? "border-[#ea4c97] bg-[#ffe9f2]"
+                                            : "border-black/8 bg-[#fffbfd] hover:bg-[#fff1f6]"
                                             } ${isCurrentMonth ? "text-black" : "text-black/30"}`}
                                     >
                                         <div className="flex items-center justify-between">
@@ -582,13 +609,27 @@ export default function LoomeiraLearningPage() {
                             />
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={handleGeneratePlan}
-                            className="mt-5 rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
-                        >
-                            Create plan
-                        </button>
+                        <div className="mt-5 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                onClick={handleGeneratePlan}
+                                disabled={isGeneratingPlan}
+                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isGeneratingPlan ? "Creating plan..." : "Create plan"}
+                            </button>
+
+                            {plan.length ? (
+                                <button
+                                    type="button"
+                                    onClick={handleAddPlanToTracker}
+                                    disabled={isAddingPlanToTracker}
+                                    className="rounded-full border border-[#ea4c97] px-5 py-3 text-sm font-medium text-[#ea4c97] transition hover:bg-[#fff1f6] disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {isAddingPlanToTracker ? "Adding..." : "Add AI plan to tracker"}
+                                </button>
+                            ) : null}
+                        </div>
 
                         <div className="mt-6 space-y-4">
                             {plan.length ? (
@@ -626,8 +667,8 @@ export default function LoomeiraLearningPage() {
                                 <div
                                     key={message.id}
                                     className={`max-w-[88%] rounded-[22px] px-4 py-3 text-sm leading-7 ${message.role === "assistant"
-                                            ? "bg-white text-black/75"
-                                            : "ml-auto bg-[#ea4c97] text-white"
+                                        ? "bg-white text-black/75"
+                                        : "ml-auto bg-[#ea4c97] text-white"
                                         }`}
                                 >
                                     {message.text}
@@ -645,9 +686,10 @@ export default function LoomeiraLearningPage() {
                             />
                             <button
                                 type="submit"
-                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
+                                disabled={isSendingChat}
+                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                Send
+                                {isSendingChat ? "Sending..." : "Send"}
                             </button>
                         </form>
                     </div>

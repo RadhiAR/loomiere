@@ -190,7 +190,11 @@ function isGifMessage(content: string) {
         return true;
     }
 
-    if (/^https?:\/\/(media\.)?(giphy\.com|tenor\.com|i\.giphy\.com|media\.tenor\.com)\//i.test(trimmed)) {
+    if (
+        /^https?:\/\/(media\.)?(giphy\.com|tenor\.com|i\.giphy\.com|media\.tenor\.com)\//i.test(
+            trimmed
+        )
+    ) {
         return true;
     }
 
@@ -329,7 +333,12 @@ export default function LoomeiraMilanPage() {
 
         const nextItem: MilanRoomMeta = {
             roomId: room.id,
-            type: room.name === "Milan Lounge" ? "lounge" : room.is_group ? "group" : "direct-admin",
+            type:
+                room.name === "Milan Lounge"
+                    ? "lounge"
+                    : room.is_group
+                        ? "group"
+                        : "direct-admin",
             memberIds: [],
             memberUsernames: [],
             createdBy: room.created_by || "",
@@ -338,14 +347,6 @@ export default function LoomeiraMilanPage() {
 
         saveOrUpdateRoomMeta(nextItem);
         return nextItem;
-    }
-
-    function findDirectAdminRoom(adminId: string) {
-        return rooms.find((room) => {
-            const meta = roomMetaMap[room.id];
-            if (!meta || meta.type !== "direct-admin") return false;
-            return meta.memberIds.includes(adminId) && meta.memberIds.includes(userId);
-        });
     }
 
     useEffect(() => {
@@ -369,6 +370,12 @@ export default function LoomeiraMilanPage() {
             window.removeEventListener("loomiere-admin-changed", onStorage as EventListener);
         };
     }, []);
+
+    useEffect(() => {
+        if (adminLoggedIn && userId && !selectedAdminIds.length) {
+            setSelectedAdminIds([userId]);
+        }
+    }, [adminLoggedIn, userId, selectedAdminIds.length]);
 
     useEffect(() => {
         let mounted = true;
@@ -563,61 +570,6 @@ export default function LoomeiraMilanPage() {
         createDefaultRoomIfNeeded();
     }, []);
 
-    async function handleStartAdminChat(admin: StoredAdminUser) {
-        if (!loggedIn) {
-            setError("Please log in to chat with Loomiera admins.");
-            return;
-        }
-
-        if (admin.id === userId) {
-            setError("You are already signed in as this admin.");
-            return;
-        }
-
-        setError("");
-
-        const existingRoom = findDirectAdminRoom(admin.id);
-        if (existingRoom?.id) {
-            setActiveRoomId(existingRoom.id);
-            return;
-        }
-
-        const roomName = `Chat with @${admin.username}`;
-
-        const { data, error } = await supabase
-            .from("loomeira_milan_rooms")
-            .insert([
-                {
-                    name: roomName,
-                    is_group: false,
-                    created_by: userId,
-                },
-            ])
-            .select();
-
-        if (error) {
-            setError("Could not open chat with this admin right now.");
-            return;
-        }
-
-        const createdRoom = Array.isArray(data) ? data[0] : null;
-
-        if (!createdRoom?.id) {
-            setError("Could not open chat with this admin right now.");
-            return;
-        }
-
-        saveOrUpdateRoomMeta({
-            roomId: createdRoom.id,
-            type: "direct-admin",
-            memberIds: [userId, admin.id],
-            memberUsernames: [username, admin.username],
-            createdBy: userId,
-        });
-
-        setActiveRoomId(createdRoom.id);
-    }
-
     async function handleCreateGroup() {
         if (!adminLoggedIn) {
             setError("Only admin users can create separate admin groups.");
@@ -637,45 +589,60 @@ export default function LoomeiraMilanPage() {
         setCreatingGroup(true);
         setError("");
 
-        const selectedAdmins = adminDirectory.filter((admin) => selectedAdminIds.includes(admin.id));
-        const memberIds = Array.from(new Set([userId, ...selectedAdmins.map((admin) => admin.id)]));
-        const memberUsernames = Array.from(
-            new Set([username, ...selectedAdmins.map((admin) => admin.username).filter(Boolean)])
-        );
+        try {
+            const selectedAdmins = adminDirectory.filter((admin) =>
+                selectedAdminIds.includes(admin.id)
+            );
 
-        const { data, error } = await supabase
-            .from("loomeira_milan_rooms")
-            .insert([
-                {
-                    name: newGroupName.trim(),
-                    is_group: true,
-                    created_by: userId,
-                },
-            ])
-            .select();
+            const memberIds = Array.from(
+                new Set([userId, ...selectedAdmins.map((admin) => admin.id)])
+            );
 
-        if (error) {
-            setError("Could not create group right now.");
+            const memberUsernames = Array.from(
+                new Set([username, ...selectedAdmins.map((admin) => admin.username).filter(Boolean)])
+            );
+
+            const { data, error } = await supabase
+                .from("loomeira_milan_rooms")
+                .insert([
+                    {
+                        name: newGroupName.trim(),
+                        is_group: true,
+                        created_by: userId,
+                    },
+                ])
+                .select()
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            if (data?.id) {
+                saveOrUpdateRoomMeta({
+                    roomId: data.id,
+                    type: "admin-group",
+                    memberIds,
+                    memberUsernames,
+                    createdBy: userId,
+                });
+
+                setRooms((prev) => {
+                    const exists = prev.some((room) => room.id === data.id);
+                    if (exists) return prev;
+                    return [...prev, data];
+                });
+
+                setActiveRoomId(data.id);
+            }
+
+            setNewGroupName("");
+            setSelectedAdminIds(adminLoggedIn ? [userId] : []);
+        } catch (createError: any) {
+            setError(createError?.message || "Could not create group right now.");
+        } finally {
             setCreatingGroup(false);
-            return;
         }
-
-        const createdRoom = Array.isArray(data) ? data[0] : null;
-
-        if (createdRoom?.id) {
-            saveOrUpdateRoomMeta({
-                roomId: createdRoom.id,
-                type: "admin-group",
-                memberIds,
-                memberUsernames,
-                createdBy: userId,
-            });
-            setActiveRoomId(createdRoom.id);
-        }
-
-        setNewGroupName("");
-        setSelectedAdminIds([]);
-        setCreatingGroup(false);
     }
 
     async function handleSendMessage(messageOverride?: string) {
@@ -780,7 +747,9 @@ export default function LoomeiraMilanPage() {
                 throw new Error("Could not generate file URL.");
             }
 
-            await handleSendMessage(buildMediaMessage(isImage ? "image" : "video", publicUrl, file.name));
+            await handleSendMessage(
+                buildMediaMessage(isImage ? "image" : "video", publicUrl, file.name)
+            );
         } catch (uploadError: any) {
             setError(
                 uploadError?.message ||
@@ -806,7 +775,9 @@ export default function LoomeiraMilanPage() {
             setLmraMessage("");
             setLmraResult(null);
 
-            const res = await fetch(`/api/custom-requests?ids=${encodeURIComponent(lmraSearch.trim())}`);
+            const res = await fetch(
+                `/api/custom-requests?ids=${encodeURIComponent(lmraSearch.trim())}`
+            );
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
@@ -962,51 +933,6 @@ export default function LoomeiraMilanPage() {
                                 ) : null}
                             </div>
 
-                            <div className="mt-5">
-                                <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-[#cb4b84]">
-                                    Loomiera admin usernames
-                                </div>
-
-                                <div className="space-y-2">
-                                    {adminDirectory.length === 0 ? (
-                                        <div className="rounded-2xl border border-[#f2c6d7] bg-white px-4 py-5 text-sm text-black/55">
-                                            No admin usernames available yet.
-                                        </div>
-                                    ) : (
-                                        adminDirectory.map((admin) => {
-                                            const isCurrentAdmin = admin.id === userId;
-
-                                            return (
-                                                <div
-                                                    key={admin.id}
-                                                    className="rounded-[22px] border border-[#f2c6d7] bg-white px-4 py-4"
-                                                >
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <div>
-                                                            <div className="text-sm font-medium text-[#731538]">
-                                                                @{admin.username}
-                                                            </div>
-                                                            <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-black/45">
-                                                                {isCurrentAdmin ? "You" : "Admin"}
-                                                            </div>
-                                                        </div>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleStartAdminChat(admin)}
-                                                            disabled={isCurrentAdmin}
-                                                            className="rounded-full border border-[#efbdd1] bg-[#fff4f8] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#b62b68] transition hover:bg-[#ffe5ef] disabled:cursor-not-allowed disabled:opacity-50"
-                                                        >
-                                                            Chat
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </div>
-
                             <div className="mt-5 space-y-2">
                                 {loadingRooms ? (
                                     <div className="rounded-2xl border border-[#f2c6d7] bg-white px-4 py-5 text-sm text-black/55">
@@ -1068,7 +994,9 @@ export default function LoomeiraMilanPage() {
                                     {activeRoomMeta?.memberUsernames?.length ? (
                                         <div className="mt-3 text-sm text-black/55">
                                             Members:{" "}
-                                            {activeRoomMeta.memberUsernames.map((member) => `@${member}`).join(", ")}
+                                            {activeRoomMeta.memberUsernames
+                                                .map((member) => `@${member}`)
+                                                .join(", ")}
                                         </div>
                                     ) : null}
                                 </div>
@@ -1092,8 +1020,8 @@ export default function LoomeiraMilanPage() {
                                                 Start the first conversation
                                             </div>
                                             <p className="mt-2 text-sm leading-7 text-black/55">
-                                                Direct-chat any admin username, use the emoji or GIF picker,
-                                                attach image or video files, or send an LMRA request card.
+                                                Use emoji or GIF picker, attach image or video files,
+                                                or send an LMRA request card.
                                             </p>
                                         </div>
                                     </div>
@@ -1105,8 +1033,12 @@ export default function LoomeiraMilanPage() {
                                             const renderAsMedia = isMediaMessage(message.content);
                                             const renderAsLmra = isLmraMessage(message.content);
 
-                                            const media = renderAsMedia ? parseMediaMessage(message.content) : null;
-                                            const lmra = renderAsLmra ? parseLmraMessage(message.content) : null;
+                                            const media = renderAsMedia
+                                                ? parseMediaMessage(message.content)
+                                                : null;
+                                            const lmra = renderAsLmra
+                                                ? parseLmraMessage(message.content)
+                                                : null;
 
                                             return (
                                                 <div
@@ -1120,7 +1052,9 @@ export default function LoomeiraMilanPage() {
                                                             }`}
                                                     >
                                                         <div
-                                                            className={`mb-1 text-[11px] uppercase tracking-[0.18em] ${mine ? "text-white/75" : "text-[#b2346d]"
+                                                            className={`mb-1 text-[11px] uppercase tracking-[0.18em] ${mine
+                                                                ? "text-white/75"
+                                                                : "text-[#b2346d]"
                                                                 }`}
                                                         >
                                                             {message.username}
@@ -1134,7 +1068,9 @@ export default function LoomeiraMilanPage() {
                                                                     }`}
                                                             >
                                                                 <div
-                                                                    className={`text-[11px] uppercase tracking-[0.22em] ${mine ? "text-white/80" : "text-[#b52e69]"
+                                                                    className={`text-[11px] uppercase tracking-[0.22em] ${mine
+                                                                        ? "text-white/80"
+                                                                        : "text-[#b52e69]"
                                                                         }`}
                                                                 >
                                                                     LMRA Request
@@ -1142,15 +1078,30 @@ export default function LoomeiraMilanPage() {
                                                                 <div className="mt-2 text-base font-semibold">
                                                                     {lmra.request_id || "No request ID"}
                                                                 </div>
-                                                                <div className={`mt-2 text-sm ${mine ? "text-white/90" : "text-black/65"}`}>
+                                                                <div
+                                                                    className={`mt-2 text-sm ${mine
+                                                                        ? "text-white/90"
+                                                                        : "text-black/65"
+                                                                        }`}
+                                                                >
                                                                     {lmra.product_type || "No product type"}
                                                                 </div>
-                                                                <div className={`mt-2 text-sm leading-6 ${mine ? "text-white/85" : "text-black/60"}`}>
+                                                                <div
+                                                                    className={`mt-2 text-sm leading-6 ${mine
+                                                                        ? "text-white/85"
+                                                                        : "text-black/60"
+                                                                        }`}
+                                                                >
                                                                     {lmra.description || "No description"}
                                                                 </div>
-                                                                <div className={`mt-3 text-xs ${mine ? "text-white/80" : "text-black/50"}`}>
-                                                                    Status: {lmra.status || "submitted"} • Updated:{" "}
-                                                                    {formatDate(lmra.updated_at)}
+                                                                <div
+                                                                    className={`mt-3 text-xs ${mine
+                                                                        ? "text-white/80"
+                                                                        : "text-black/50"
+                                                                        }`}
+                                                                >
+                                                                    Status: {lmra.status || "submitted"} •
+                                                                    Updated: {formatDate(lmra.updated_at)}
                                                                 </div>
                                                             </div>
                                                         ) : renderAsMedia && media ? (
@@ -1168,7 +1119,12 @@ export default function LoomeiraMilanPage() {
                                                                         className="max-h-[360px] rounded-2xl"
                                                                     />
                                                                 )}
-                                                                <div className={`text-xs break-all ${mine ? "text-white/80" : "text-black/50"}`}>
+                                                                <div
+                                                                    className={`text-xs break-all ${mine
+                                                                        ? "text-white/80"
+                                                                        : "text-black/50"
+                                                                        }`}
+                                                                >
                                                                     {media.filename}
                                                                 </div>
                                                             </div>
@@ -1185,7 +1141,9 @@ export default function LoomeiraMilanPage() {
                                                         )}
 
                                                         <div
-                                                            className={`mt-2 text-[11px] ${mine ? "text-white/75" : "text-black/40"
+                                                            className={`mt-2 text-[11px] ${mine
+                                                                ? "text-white/75"
+                                                                : "text-black/40"
                                                                 }`}
                                                         >
                                                             {formatTime(message.created_at)}
