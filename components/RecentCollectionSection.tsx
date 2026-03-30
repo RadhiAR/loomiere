@@ -13,6 +13,17 @@ type ProductItem = {
     category?: string | null;
 };
 
+function getCategoryHref(category?: string | null) {
+    const normalized = (category || "").trim().toLowerCase();
+
+    if (normalized === "apparel") return "#apparel";
+    if (normalized === "pet" || normalized === "pets") return "#pet";
+    if (normalized === "jewellery") return "#jewellery";
+    if (normalized === "home" || normalized === "home decor") return "#home";
+
+    return "#apparel";
+}
+
 export default function RecentCollectionSection() {
     const [products, setProducts] = useState<ProductItem[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -24,7 +35,7 @@ export default function RecentCollectionSection() {
                 .select("id, slug, name, price, image_url, category, created_at")
                 .eq("is_active", true)
                 .order("created_at", { ascending: false })
-                .limit(12); // 🔥 more products
+                .limit(12);
 
             if (data) setProducts(data);
         };
@@ -45,9 +56,8 @@ export default function RecentCollectionSection() {
     if (!products.length) return null;
 
     return (
-        <section className="bg-[#f8f3ef] px-6 py-16 md:px-10 lg:px-16 relative">
+        <section className="relative bg-[#f8f3ef] px-6 py-16 md:px-10 lg:px-16">
             <div className="mx-auto max-w-7xl">
-                {/* Heading */}
                 <div className="mb-10 text-center">
                     <p className="mb-3 text-[11px] uppercase tracking-[0.35em] text-black/55">
                         New
@@ -57,10 +67,10 @@ export default function RecentCollectionSection() {
                     </h2>
                 </div>
 
-                {/* Arrows */}
                 <button
                     onClick={() => scroll("left")}
                     className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-white p-3 shadow hover:bg-black hover:text-white"
+                    aria-label="Scroll left"
                 >
                     ←
                 </button>
@@ -68,19 +78,17 @@ export default function RecentCollectionSection() {
                 <button
                     onClick={() => scroll("right")}
                     className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-white p-3 shadow hover:bg-black hover:text-white"
+                    aria-label="Scroll right"
                 >
                     →
                 </button>
 
-                {/* Scroll Container */}
                 <div
                     ref={scrollRef}
                     className="flex gap-6 overflow-x-auto scroll-smooth no-scrollbar"
                 >
                     {products.map((product) => {
-                        const href = product.category
-                            ? `/shop?category=${encodeURIComponent(product.category)}`
-                            : "/shop";
+                        const href = getCategoryHref(product.category);
 
                         return (
                             <Link
@@ -96,14 +104,17 @@ export default function RecentCollectionSection() {
                                             className="h-[360px] w-full object-cover transition duration-500 hover:scale-[1.02]"
                                         />
                                     ) : (
-                                        <div className="h-[360px] flex items-center justify-center text-sm text-black/40">
+                                        <div className="flex h-[360px] items-center justify-center text-sm text-black/40">
                                             No image
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="pt-4">
-                                    <h3 className="text-base font-light text-black">
+                                    <p className="text-[11px] uppercase tracking-[0.24em] text-black/45">
+                                        {product.category || "Collection"}
+                                    </p>
+                                    <h3 className="mt-2 text-base font-light text-black">
                                         {product.name}
                                     </h3>
                                     <p className="mt-1 text-sm text-black/65">
@@ -115,13 +126,33 @@ export default function RecentCollectionSection() {
                     })}
                 </div>
 
-                {/* Button */}
-                <div className="mt-10 text-center">
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                     <Link
-                        href="/shop"
-                        className="inline-flex rounded-full border border-black px-8 py-3 text-sm uppercase tracking-[0.24em] text-black transition hover:bg-black hover:text-white"
+                        href="#apparel"
+                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
                     >
-                        Shop Now
+                        Shop Apparel
+                    </Link>
+
+                    <Link
+                        href="#pet"
+                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
+                    >
+                        Shop Pet
+                    </Link>
+
+                    <Link
+                        href="#jewellery"
+                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
+                    >
+                        Shop Jewellery
+                    </Link>
+
+                    <Link
+                        href="#home"
+                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
+                    >
+                        Shop Home
                     </Link>
                 </div>
             </div>
