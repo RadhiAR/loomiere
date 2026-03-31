@@ -9,6 +9,7 @@ type LearningEntry = {
     date: string;
     title: string;
     notes: string;
+    progress: number;
 };
 
 type ChatMessage = {
@@ -72,10 +73,13 @@ export default function LoomeiraLearningPage() {
     const [goalTitle, setGoalTitle] = useState("");
     const [goalNotes, setGoalNotes] = useState("");
 
+    const [editingProgressId, setEditingProgressId] = useState<string | null>(null);
+    const [progressDraft, setProgressDraft] = useState("");
+
     const [topic, setTopic] = useState("Crochet roses");
-    const [level, setLevel] = useState("Beginner");
-    const [capacity, setCapacity] = useState("4");
-    const [duration, setDuration] = useState("4");
+    const [experience, setExperience] = useState("Beginner");
+    const [hoursPerDay, setHoursPerDay] = useState("1");
+    const [daysPerWeek, setDaysPerWeek] = useState("4");
     const [goal, setGoal] = useState("make decorative crochet roses confidently");
     const [plan, setPlan] = useState<PlanWeek[]>([]);
 
@@ -96,7 +100,17 @@ export default function LoomeiraLearningPage() {
         const stored = window.localStorage.getItem("loomeira-learning-entries");
         if (stored) {
             try {
-                setEntries(JSON.parse(stored));
+                const parsed = JSON.parse(stored);
+                const normalized = Array.isArray(parsed)
+                    ? parsed.map((entry) => ({
+                        ...entry,
+                        progress:
+                            typeof entry.progress === "number" && Number.isFinite(entry.progress)
+                                ? Math.max(0, Math.min(100, entry.progress))
+                                : 0,
+                    }))
+                    : [];
+                setEntries(normalized);
             } catch {
                 setEntries([]);
             }
@@ -127,13 +141,19 @@ export default function LoomeiraLearningPage() {
         [entries, selectedDate]
     );
 
-    const upcomingEntries = useMemo(
-        () =>
-            [...entries]
-                .sort((a, b) => a.date.localeCompare(b.date))
-                .filter((entry) => entry.date >= formatDateKey(today))
-                .slice(0, 6),
-        [entries, today]
+    const selectedDateInProgressEntries = useMemo(
+        () => selectedDateEntries.filter((entry) => entry.progress < 100),
+        [selectedDateEntries]
+    );
+
+    const selectedDateCompletedEntries = useMemo(
+        () => selectedDateEntries.filter((entry) => entry.progress >= 100),
+        [selectedDateEntries]
+    );
+
+    const overallPlannerEntries = useMemo(
+        () => [...entries].sort((a, b) => a.date.localeCompare(b.date)),
+        [entries]
     );
 
     function handleAddGoal(e: FormEvent) {
@@ -146,6 +166,7 @@ export default function LoomeiraLearningPage() {
             date: selectedDate,
             title: goalTitle.trim(),
             notes: goalNotes.trim(),
+            progress: 0,
         };
 
         setEntries((prev) => [...prev, newEntry]);
@@ -155,6 +176,38 @@ export default function LoomeiraLearningPage() {
 
     function handleDeleteGoal(id: string) {
         setEntries((prev) => prev.filter((entry) => entry.id !== id));
+
+        if (editingProgressId === id) {
+            setEditingProgressId(null);
+            setProgressDraft("");
+        }
+    }
+
+    function handleStartProgressEdit(entry: LearningEntry) {
+        setEditingProgressId(entry.id);
+        setProgressDraft(String(entry.progress ?? 0));
+    }
+
+    function handleSaveProgress(id: string) {
+        const parsed = Number(progressDraft);
+
+        if (!Number.isFinite(parsed)) return;
+
+        const nextProgress = Math.max(0, Math.min(100, Math.round(parsed)));
+
+        setEntries((prev) =>
+            prev.map((entry) =>
+                entry.id === id ? { ...entry, progress: nextProgress } : entry
+            )
+        );
+
+        setEditingProgressId(null);
+        setProgressDraft("");
+    }
+
+    function handleCancelProgressEdit() {
+        setEditingProgressId(null);
+        setProgressDraft("");
     }
 
     async function handleGeneratePlan() {
@@ -173,6 +226,9 @@ export default function LoomeiraLearningPage() {
         setIsGeneratingPlan(true);
 
         try {
+            const weeklyHours =
+                Math.max(1, Number(hoursPerDay) || 1) * Math.max(1, Number(daysPerWeek) || 1);
+
             const response = await fetch("/api/loomeira-learning", {
                 method: "POST",
                 headers: {
@@ -181,10 +237,13 @@ export default function LoomeiraLearningPage() {
                 body: JSON.stringify({
                     mode: "plan",
                     topic,
-                    level,
-                    capacity,
-                    duration,
+                    level: experience,
+                    capacity: String(weeklyHours),
+                    duration: "4",
                     goal,
+                    experience,
+                    hoursPerDay,
+                    daysPerWeek,
                 }),
             });
 
@@ -232,6 +291,7 @@ export default function LoomeiraLearningPage() {
             date: addDaysToDateKey(selectedDate, index * 7),
             title: item.focus,
             notes: item.goal,
+            progress: 0,
         }));
 
         setEntries((prev) => [...prev, ...newEntries]);
@@ -266,6 +326,9 @@ export default function LoomeiraLearningPage() {
         setIsSendingChat(true);
 
         try {
+            const weeklyHours =
+                Math.max(1, Number(hoursPerDay) || 1) * Math.max(1, Number(daysPerWeek) || 1);
+
             const response = await fetch("/api/loomeira-learning", {
                 method: "POST",
                 headers: {
@@ -275,10 +338,13 @@ export default function LoomeiraLearningPage() {
                     mode: "chat",
                     question: userText,
                     topic,
-                    level,
-                    capacity,
-                    duration,
+                    level: experience,
+                    capacity: String(weeklyHours),
+                    duration: "4",
                     goal,
+                    experience,
+                    hoursPerDay,
+                    daysPerWeek,
                     plan,
                 }),
             });
@@ -329,10 +395,12 @@ export default function LoomeiraLearningPage() {
                     </h1>
 
                     <p className="mt-6 max-w-4xl text-base leading-8 text-black/60 md:text-lg">
-                        Create your own learning calendar, choose any date, add goals, and keep
-                        track of what you want to learn step by step. You can also use the AI
-                        planner to build a personalized learning routine based on your time and
-                        goals.
+                        Take your learning journey to the next level with Loomeira Learning ✨
+                        Build your path with our exclusive AI plan generator, stay inspired with
+                        creative goals, and track your progress beautifully through your Loomeira
+                        calendar. Excitingly, once you start growing your skills, you can also
+                        share your progress in Loomeira Milan with other admin users and celebrate
+                        every handmade milestone together 💖
                     </p>
                 </div>
 
@@ -473,21 +541,146 @@ export default function LoomeiraLearningPage() {
                                 </button>
                             </form>
 
-                            <div className="mt-6 space-y-3">
-                                {selectedDateEntries.length ? (
-                                    selectedDateEntries.map((entry) => (
+                            <div className="mt-8 text-xs uppercase tracking-[0.22em] text-black/50">
+                                Goals in Progress
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                                {selectedDateInProgressEntries.length ? (
+                                    selectedDateInProgressEntries.map((entry) => {
+                                        const isEditing = editingProgressId === entry.id;
+
+                                        return (
+                                            <div
+                                                key={entry.id}
+                                                className="rounded-[20px] border border-white/70 bg-white p-4"
+                                            >
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="font-medium">{entry.title}</div>
+
+                                                        {entry.notes ? (
+                                                            <p className="mt-2 text-sm leading-6 text-black/60">
+                                                                {entry.notes}
+                                                            </p>
+                                                        ) : null}
+
+                                                        <div className="mt-4">
+                                                            <div className="mb-2 flex items-center justify-between gap-3">
+                                                                <span className="text-xs uppercase tracking-[0.18em] text-black/45">
+                                                                    Progress
+                                                                </span>
+                                                                <span className="text-sm font-medium text-[#ea4c97]">
+                                                                    {entry.progress}%
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="h-2 w-full overflow-hidden rounded-full bg-[#f6d9e5]">
+                                                                <div
+                                                                    className="h-full rounded-full bg-[#ea4c97] transition-all"
+                                                                    style={{ width: `${entry.progress}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        {isEditing ? (
+                                                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    max="100"
+                                                                    value={progressDraft}
+                                                                    onChange={(e) => setProgressDraft(e.target.value)}
+                                                                    placeholder="0 to 100"
+                                                                    className="w-28 rounded-full border border-black/10 bg-[#fffbfd] px-4 py-2 text-sm outline-none transition focus:border-[#ea4c97]"
+                                                                />
+                                                                <span className="text-sm text-black/45">%</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleSaveProgress(entry.id)}
+                                                                    className="rounded-full bg-[#ea4c97] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                                                                >
+                                                                    Save
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleCancelProgressEdit}
+                                                                    className="rounded-full border border-black/10 px-4 py-2 text-sm transition hover:bg-[#fff1f6]"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <div className="flex shrink-0 items-center gap-3">
+                                                        {!isEditing ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleStartProgressEdit(entry)}
+                                                                className="text-sm text-black/45 transition hover:text-[#ea4c97]"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        ) : null}
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteGoal(entry.id)}
+                                                            className="text-sm text-black/45 transition hover:text-[#ea4c97]"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-sm leading-7 text-black/55">
+                                        No goals in progress for this date yet.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="mt-8 text-xs uppercase tracking-[0.22em] text-black/50">
+                                Goals Completed
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                                {selectedDateCompletedEntries.length ? (
+                                    selectedDateCompletedEntries.map((entry) => (
                                         <div
                                             key={entry.id}
                                             className="rounded-[20px] border border-white/70 bg-white p-4"
                                         >
                                             <div className="flex items-start justify-between gap-4">
-                                                <div>
+                                                <div className="min-w-0 flex-1">
                                                     <div className="font-medium">{entry.title}</div>
+
                                                     {entry.notes ? (
                                                         <p className="mt-2 text-sm leading-6 text-black/60">
                                                             {entry.notes}
                                                         </p>
                                                     ) : null}
+
+                                                    <div className="mt-4">
+                                                        <div className="mb-2 flex items-center justify-between gap-3">
+                                                            <span className="text-xs uppercase tracking-[0.18em] text-black/45">
+                                                                Completed
+                                                            </span>
+                                                            <span className="text-sm font-medium text-[#ea4c97]">
+                                                                100%
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-[#f6d9e5]">
+                                                            <div
+                                                                className="h-full rounded-full bg-[#ea4c97]"
+                                                                style={{ width: "100%" }}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                                 <button
@@ -502,37 +695,52 @@ export default function LoomeiraLearningPage() {
                                     ))
                                 ) : (
                                     <p className="text-sm leading-7 text-black/55">
-                                        No goals for this date yet. Add one above.
+                                        No completed goals for this date yet.
                                     </p>
                                 )}
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div className="rounded-[30px] border border-[#f2cddd] bg-white p-6 shadow-sm">
-                            <div className="text-xs uppercase tracking-[0.22em] text-black/50">
-                                Upcoming Goals
-                            </div>
+                <div className="mt-8 rounded-[30px] border border-[#f2cddd] bg-white p-6 shadow-sm md:p-8">
+                    <div className="text-xs uppercase tracking-[0.22em] text-black/50">
+                        Overall Planner
+                    </div>
 
-                            <div className="mt-4 space-y-3">
-                                {upcomingEntries.length ? (
-                                    upcomingEntries.map((entry) => (
-                                        <div
-                                            key={entry.id}
-                                            className="rounded-[18px] border border-black/8 bg-[#fff8fb] p-4"
-                                        >
-                                            <div className="text-xs uppercase tracking-[0.18em] text-black/45">
-                                                {entry.date}
-                                            </div>
-                                            <div className="mt-2 font-medium">{entry.title}</div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm leading-7 text-black/55">
-                                        Your future learning goals will appear here.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+                    <h2 className="mt-3 text-2xl font-medium">Your plans across all dates</h2>
+
+                    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {overallPlannerEntries.length ? (
+                            overallPlannerEntries.map((entry) => (
+                                <div
+                                    key={entry.id}
+                                    className="rounded-[22px] border border-black/8 bg-[#fff8fb] p-4"
+                                >
+                                    <div className="text-xs uppercase tracking-[0.18em] text-black/45">
+                                        {entry.date}
+                                    </div>
+                                    <div className="mt-2 font-medium">{entry.title}</div>
+                                    {entry.notes ? (
+                                        <p className="mt-2 text-sm leading-6 text-black/60">
+                                            {entry.notes}
+                                        </p>
+                                    ) : null}
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <span className="text-xs uppercase tracking-[0.18em] text-black/45">
+                                            Status
+                                        </span>
+                                        <span className="text-sm font-medium text-[#ea4c97]">
+                                            {entry.progress >= 100 ? "Completed" : `${entry.progress}%`}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm leading-7 text-black/55">
+                                Your overall planner will appear here once you start adding goals.
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -547,7 +755,7 @@ export default function LoomeiraLearningPage() {
                         <div className="mt-6 grid gap-4 md:grid-cols-2">
                             <div>
                                 <label className="mb-2 block text-sm text-black/60">
-                                    What do you want to learn?
+                                    What would you like to learn?
                                 </label>
                                 <input
                                     type="text"
@@ -558,10 +766,12 @@ export default function LoomeiraLearningPage() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm text-black/60">Level</label>
+                                <label className="mb-2 block text-sm text-black/60">
+                                    Experience level
+                                </label>
                                 <select
-                                    value={level}
-                                    onChange={(e) => setLevel(e.target.value)}
+                                    value={experience}
+                                    onChange={(e) => setExperience(e.target.value)}
                                     className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
                                 >
                                     <option>Beginner</option>
@@ -572,26 +782,27 @@ export default function LoomeiraLearningPage() {
 
                             <div>
                                 <label className="mb-2 block text-sm text-black/60">
-                                    Hours per week
+                                    Hours per day
                                 </label>
                                 <input
                                     type="number"
                                     min="1"
-                                    value={capacity}
-                                    onChange={(e) => setCapacity(e.target.value)}
+                                    value={hoursPerDay}
+                                    onChange={(e) => setHoursPerDay(e.target.value)}
                                     className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
                                 />
                             </div>
 
                             <div>
                                 <label className="mb-2 block text-sm text-black/60">
-                                    Duration in weeks
+                                    Days per week
                                 </label>
                                 <input
                                     type="number"
                                     min="1"
-                                    value={duration}
-                                    onChange={(e) => setDuration(e.target.value)}
+                                    max="7"
+                                    value={daysPerWeek}
+                                    onChange={(e) => setDaysPerWeek(e.target.value)}
                                     className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
                                 />
                             </div>
@@ -599,7 +810,7 @@ export default function LoomeiraLearningPage() {
 
                         <div className="mt-4">
                             <label className="mb-2 block text-sm text-black/60">
-                                Your goal or requirement
+                                Goal or learning requirement
                             </label>
                             <textarea
                                 value={goal}
