@@ -611,10 +611,15 @@ export default function Navbar({ theme = "dark" }: Props) {
     return (
         <>
             <header className="fixed left-0 right-0 top-0 z-[2000]">
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-                    <BrandLogo href="/" size="sm" variant={isDark ? "light" : "dark"} />
+                <div className="flex w-full items-start justify-between px-10 pt-4 pb-6 lg:px-16">
+                    <BrandLogo
+                        href="/"
+                        size="md"
+                        variant={isDark ? "light" : "dark"}
+                        className="-mt-2"
+                    />
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-start gap-4 pt-1">
                         <Link href="/orders" className={pill}>
                             My Orders
                         </Link>
@@ -992,8 +997,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Login
@@ -1007,8 +1012,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Sign Up
@@ -1021,8 +1026,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setForgotMessage("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "forgot"
-                                        ? "bg-[#ef5f9a] text-white"
-                                        : "border border-[#efc5d7] bg-white text-black/70"
+                                    ? "bg-[#ef5f9a] text-white"
+                                    : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Forgot Password

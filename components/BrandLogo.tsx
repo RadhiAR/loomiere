@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 type BrandLogoProps = {
     href?: string;
@@ -13,38 +14,42 @@ export default function BrandLogo({
     variant = "light",
     className = "",
 }: BrandLogoProps) {
-    const mainColor = variant === "light" ? "text-white" : "text-black";
-    const subColor = variant === "light" ? "text-white/70" : "text-black/55";
 
     const sizeMap = {
         sm: {
-            main: "text-[34px] md:text-[40px]",
-            sub: "text-[8px] md:text-[9px]",
+            width: 180,
+            height: 110,
         },
         md: {
-            main: "text-[42px] md:text-[52px]",
-            sub: "text-[9px] md:text-[10px]",
+            width: 220,
+            height: 135,
         },
         lg: {
-            main: "text-[52px] md:text-[64px]",
-            sub: "text-[10px] md:text-[11px]",
+            width: 260,
+            height: 160,
         },
-    };
+    } as const;
 
     const selected = sizeMap[size];
+    const logoSrc =
+        variant === "light"
+            ? "/loomeira-logo.png"
+            : "/loomeira-logo-black.png";
 
     return (
-        <Link href={href} className={`inline-flex flex-col items-start leading-none select-none ${className}`}>
-            <div
-                className={`${mainColor} ${selected.main} font-semibold italic tracking-[-0.08em]`}
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-            >
-                LMRA
-            </div>
-
-            <div className={`${subColor} ${selected.sub} mt-1 pl-[2px] uppercase tracking-[0.38em]`}>
-                LOOMEIRA
-            </div>
+        <Link
+            href={href}
+            className={`inline-flex items-center justify-center select-none ${className}`}
+            aria-label="Loomeira home"
+        >
+            <Image
+                src={logoSrc}
+                alt="Loomeira logo"
+                width={selected.width}
+                height={selected.height}
+                priority
+                className="h-auto w-auto object-contain"
+            />
         </Link>
     );
 }
