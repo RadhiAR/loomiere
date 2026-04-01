@@ -80,7 +80,7 @@ const categoryCards = [
 
 export default function HomePage() {
     return (
-        <main className="relative bg-[#fbf7f3] text-[#2f2928]">
+        <main className="relative min-h-screen bg-white text-[#2f2928]">
             <Navbar brand="LOOMIÈRE" theme="dark" />
 
             <Hero
@@ -94,8 +94,8 @@ export default function HomePage() {
                 heroImageUrl="/hero.jpg"
             />
 
-            <section className="bg-[linear-gradient(135deg,#fff4f8_0%,#fde8f0_35%,#f9d9e8_65%,#f6d1e0_100%)] px-6 py-14 md:px-10 md:py-20 lg:px-16">
-                <div className="mx-auto max-w-[1320px] overflow-hidden rounded-[36px] border border-[#eed6df] bg-white/30 px-6 py-10 shadow-[0_24px_90px_rgba(189,120,146,0.14)] backdrop-blur-sm md:px-10 md:py-14 lg:px-12">
+            <section className="bg-white px-6 py-14 md:px-10 md:py-20 lg:px-16">
+                <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] px-6 py-10 shadow-[0_20px_70px_rgba(0,0,0,0.05)] md:px-10 md:py-14 lg:px-12">
                     <div className="mb-10 text-center">
                         <p className="mb-4 text-[11px] uppercase tracking-[0.42em] text-[#a77f8d]">
                             Shop by Category
@@ -147,11 +147,8 @@ export default function HomePage() {
                 </div>
             </section>
 
-            <section
-                id="new-arrivals"
-                className="bg-[linear-gradient(135deg,#fff4f8_0%,#fde8f0_35%,#f9d9e8_65%,#f6d1e0_100%)] pb-10 pt-10 md:pt-14"
-            >
-                <div className="mx-auto max-w-[1240px] px-6 md:px-10 lg:px-16">
+            <section id="new-arrivals" className="bg-white px-6 pb-12 pt-8 md:px-10 md:pb-14 md:pt-10 lg:px-16">
+                <div className="mx-auto max-w-[1400px]">
                     <div className="mb-8 text-center">
                         <p className="mb-3 text-[11px] uppercase tracking-[0.38em] text-[#ad8a93]">
                             New Arrivals
@@ -165,18 +162,17 @@ export default function HomePage() {
                             unchanged.
                         </p>
                     </div>
-                </div>
 
-                <div className="mx-auto max-w-[1320px] px-4 md:px-6 lg:px-8">
-                    <div className="rounded-[32px] bg-white/35 backdrop-blur-sm">
-                        <RecentCollectionSection />
+                    <div className="overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] shadow-[0_20px_70px_rgba(0,0,0,0.05)]">
+                        <div className="bg-[#fdf6f8]">
+                            <RecentCollectionSection />
+                        </div>
                     </div>
                 </div>
             </section>
 
-
-            <section className="relative bg-[linear-gradient(135deg,#fff4f8_0%,#fde8f0_35%,#f9d9e8_65%,#f6d1e0_100%)] px-6 pb-16 pt-4 md:px-10 md:pb-16 md:pt-2 lg:px-16">
-                <div className="mx-auto max-w-[1400px] overflow-hidden rounded-t-[36px] border border-[#ead3dc] bg-white/35 backdrop-blur-sm">
+            <section className="relative bg-white px-6 pb-16 pt-4 md:px-10 md:pb-16 md:pt-6 lg:px-16">
+                <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] shadow-[0_20px_70px_rgba(0,0,0,0.05)]">
                     <div className="border-b border-black/10 px-6 py-14 md:px-12 lg:px-16">
                         <div className="mb-12 max-w-3xl">
                             <p className="mb-3 text-[11px] uppercase tracking-[0.34em] text-black/45">

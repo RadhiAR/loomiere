@@ -56,20 +56,20 @@ export default function RecentCollectionSection() {
     if (!products.length) return null;
 
     return (
-        <section className="relative bg-[#f8f3ef] px-6 pb-16 pt-4 md:px-10 md:pb-16 md:pt-2 lg:px-16">
-            <div className="mx-auto max-w-7xl">
+        <section className="relative bg-[#fdf6f8] px-6 pb-16 pt-4 md:px-10 md:pb-16 md:pt-2 lg:px-16">
+            <div className="mx-auto max-w-[1400px]">
                 <div className="mb-8 text-center">
                     <p className="mb-2 text-[11px] uppercase tracking-[0.35em] text-black/55">
                         New
                     </p>
-                    <h2 className="text-3xl font-light tracking-[0.04em] text-black md:text-5xl">
+                    <h2 className="text-3xl font-light tracking-[0.02em] text-black md:text-5xl">
                         Trending Now
                     </h2>
                 </div>
 
                 <button
                     onClick={() => scroll("left")}
-                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-white p-3 shadow hover:bg-black hover:text-white"
+                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#e4d6dc] bg-white/90 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition hover:bg-white"
                     aria-label="Scroll left"
                 >
                     ←
@@ -77,7 +77,7 @@ export default function RecentCollectionSection() {
 
                 <button
                     onClick={() => scroll("right")}
-                    className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-white p-3 shadow hover:bg-black hover:text-white"
+                    className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#e4d6dc] bg-white/90 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition hover:bg-white"
                     aria-label="Scroll right"
                 >
                     →
@@ -96,7 +96,7 @@ export default function RecentCollectionSection() {
                                 href={href}
                                 className="min-w-[260px] max-w-[260px] flex-shrink-0"
                             >
-                                <div className="overflow-hidden bg-[#ece7e2]">
+                                <div className="overflow-hidden rounded-[24px] bg-[#f7eef2]">
                                     {product.image_url ? (
                                         <img
                                             src={product.image_url}
