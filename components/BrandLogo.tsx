@@ -1,41 +1,50 @@
 import Link from "next/link";
 
-type Props = {
+type BrandLogoProps = {
     href?: string;
     size?: "sm" | "md" | "lg";
+    variant?: "light" | "dark";
+    className?: string;
 };
 
-export default function BrandLogo({ href = "/", size = "md" }: Props) {
-    const sizeClass =
-        size === "sm"
-            ? "text-lg"
-            : size === "lg"
-                ? "text-4xl md:text-5xl"
-                : "text-2xl md:text-3xl";
+export default function BrandLogo({
+    href = "/",
+    size = "sm",
+    variant = "light",
+    className = "",
+}: BrandLogoProps) {
+    const mainColor = variant === "light" ? "text-white" : "text-black";
+    const subColor = variant === "light" ? "text-white/70" : "text-black/55";
 
-    const content = (
-        <div className="relative inline-flex items-center">
-            <span
-                className={`relative ${sizeClass} font-semibold uppercase tracking-[0.28em] italic text-transparent bg-clip-text bg-gradient-to-r from-[#ff4fa3] via-[#ff87d8] via-[45%] to-[#ffd36e] drop-shadow-[0_0_10px_rgba(255,120,190,0.45)]`}
-                style={{
-                    WebkitTextStroke: "0.15px rgba(255,255,255,0.35)",
-                }}
+    const sizeMap = {
+        sm: {
+            main: "text-[34px] md:text-[40px]",
+            sub: "text-[8px] md:text-[9px]",
+        },
+        md: {
+            main: "text-[42px] md:text-[52px]",
+            sub: "text-[9px] md:text-[10px]",
+        },
+        lg: {
+            main: "text-[52px] md:text-[64px]",
+            sub: "text-[10px] md:text-[11px]",
+        },
+    };
+
+    const selected = sizeMap[size];
+
+    return (
+        <Link href={href} className={`inline-flex flex-col items-start leading-none select-none ${className}`}>
+            <div
+                className={`${mainColor} ${selected.main} font-semibold italic tracking-[-0.08em]`}
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
             >
+                LMRA
+            </div>
+
+            <div className={`${subColor} ${selected.sub} mt-1 pl-[2px] uppercase tracking-[0.38em]`}>
                 LOOMEIRA
-            </span>
-
-            <span className="pointer-events-none absolute inset-0 blur-xl opacity-45 bg-gradient-to-r from-[#ff4fa3] via-[#ff87d8] to-[#ffd36e]" />
-
-            <span
-                className="pointer-events-none absolute -inset-x-2 top-1/2 h-[38%] -translate-y-1/2 rounded-full opacity-45"
-                style={{
-                    background:
-                        "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%)",
-                    filter: "blur(6px)",
-                }}
-            />
-        </div>
+            </div>
+        </Link>
     );
-
-    return href ? <Link href={href}>{content}</Link> : content;
 }

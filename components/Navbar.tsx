@@ -610,9 +610,9 @@ export default function Navbar({ theme = "dark" }: Props) {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 z-[2000]">
+            <header className="fixed left-0 right-0 top-0 z-[2000]">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-                    <BrandLogo href="/" size="sm" />
+                    <BrandLogo href="/" size="sm" variant={isDark ? "light" : "dark"} />
 
                     <div className="flex items-center gap-4">
                         <Link href="/orders" className={pill}>
@@ -661,7 +661,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                     <aside className="absolute right-0 top-0 h-full w-[320px] overflow-y-auto border-l border-[#f2cddd] bg-[#fff7fa] shadow-2xl">
                         <div className="flex items-center justify-between border-b border-[#f2cddd] px-5 py-5">
                             <div>
-                                <BrandLogo size="sm" />
+                                <BrandLogo href="/" size="sm" variant="dark" />
                                 <div className="mt-2 text-sm text-black/55">Menu</div>
                             </div>
 
@@ -992,8 +992,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Login
@@ -1007,8 +1007,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Sign Up
@@ -1021,8 +1021,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setForgotMessage("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "forgot"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Forgot Password

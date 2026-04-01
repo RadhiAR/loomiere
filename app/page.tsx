@@ -85,8 +85,8 @@ export default function HomePage() {
 
             <Hero
                 brandName="LMRA"
-                headline={"Crafted\nElegance,\nWoven by Hand"}
-                tagline="Soft luxury in handmade fashion, décor, pet pieces, and jewellery."
+                headline={"Exclusive\nHandcrafted,\nCollection"}
+                tagline="Elegance in every design"
                 ctaText="Shop Now"
                 ctaHref="#new-arrivals"
                 secondaryCtaText="Know Loomeira"
