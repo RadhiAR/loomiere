@@ -81,15 +81,15 @@ const categoryCards = [
 export default function HomePage() {
     return (
         <main className="relative min-h-screen bg-white text-[#2f2928]">
-            <Navbar brand="LOOMIÈRE" theme="dark" />
+            <Navbar brand="LMRA" theme="dark" />
 
             <Hero
-                brandName="LOOMIÈRE"
+                brandName="LMRA"
                 headline={"Crafted\nElegance,\nWoven by Hand"}
                 tagline="Soft luxury in handmade fashion, décor, pet pieces, and jewellery."
                 ctaText="Shop Now"
                 ctaHref="#new-arrivals"
-                secondaryCtaText="Know Loomière"
+                secondaryCtaText="Know Loomeira"
                 secondaryCtaHref="/about"
                 heroImageUrl="/hero.jpg"
             />
@@ -147,7 +147,10 @@ export default function HomePage() {
                 </div>
             </section>
 
-            <section id="new-arrivals" className="bg-white px-6 pb-12 pt-8 md:px-10 md:pb-14 md:pt-10 lg:px-16">
+            <section
+                id="new-arrivals"
+                className="bg-white px-6 pb-12 pt-8 md:px-10 md:pb-14 md:pt-10 lg:px-16"
+            >
                 <div className="mx-auto max-w-[1400px]">
                     <div className="mb-8 text-center">
                         <p className="mb-3 text-[11px] uppercase tracking-[0.38em] text-[#ad8a93]">
@@ -227,7 +230,11 @@ export default function HomePage() {
                         </div>
 
                         <div className="mt-12 border-t border-black/10 pt-10 text-center">
-                            <div className="text-3xl font-semibold tracking-[0.16em] text-black md:text-4xl">
+                            <div className="text-[42px] font-serif font-medium tracking-[0.08em] text-black md:text-[64px]">
+                                LMRA
+                            </div>
+
+                            <div className="mt-3 text-[10px] uppercase tracking-[0.6em] text-black/60 md:text-[11px]">
                                 LOOMEIRA
                             </div>
 
