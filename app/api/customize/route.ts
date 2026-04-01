@@ -28,7 +28,10 @@ export async function POST(req: Request) {
         const description = String(formData.get("description") || "").trim();
         const measurements = String(formData.get("measurements") || "").trim();
         const notes = String(formData.get("notes") || "").trim();
-        const photo = formData.get("photo");
+
+        const uploadedFiles = formData
+            .getAll("photo")
+            .filter((item): item is File => item instanceof File && item.size > 0);
 
         if (!firstName || !lastName || !email || !phone || !zipcode) {
             return Response.json(
@@ -37,14 +40,13 @@ export async function POST(req: Request) {
             );
         }
 
-        const hasPhoto =
-            photo instanceof File && typeof photo.name === "string" && photo.size > 0;
+        const hasPhotos = uploadedFiles.length > 0;
 
-        if (!description && !hasPhoto) {
+        if (!description && !hasPhotos) {
             return Response.json(
                 {
                     message:
-                        "Please upload a photo, write a description, or provide both before submitting.",
+                        "Please upload at least one photo, write a description, or provide both before submitting.",
                 },
                 { status: 400 }
             );
@@ -75,23 +77,25 @@ export async function POST(req: Request) {
 
         const requestId = buildRequestId(insertedRow.id);
 
-        let photoPath: string | null = null;
-        let photoUrl: string | null = null;
-        let attachments: Array<{
+        const photoPaths: string[] = [];
+        const photoUrls: string[] = [];
+        const attachments: Array<{
             filename: string;
             content: Buffer;
             contentType?: string;
         }> = [];
 
-        if (hasPhoto && photo instanceof File) {
-            const bytes = await photo.arrayBuffer();
-            const safeFileName = sanitizeFileName(photo.name || "reference.jpg");
-            photoPath = `${requestId}/${Date.now()}-${safeFileName}`;
+        for (const file of uploadedFiles) {
+            const bytes = await file.arrayBuffer();
+            const safeFileName = sanitizeFileName(file.name || "reference.jpg");
+            const photoPath = `${requestId}/${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2, 8)}-${safeFileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from("custom-requests")
                 .upload(photoPath, Buffer.from(bytes), {
-                    contentType: photo.type || "application/octet-stream",
+                    contentType: file.type || "application/octet-stream",
                     upsert: false,
                 });
 
@@ -103,21 +107,25 @@ export async function POST(req: Request) {
                 .from("custom-requests")
                 .getPublicUrl(photoPath);
 
-            photoUrl = publicUrlData.publicUrl;
+            photoPaths.push(photoPath);
+            photoUrls.push(publicUrlData.publicUrl);
 
             attachments.push({
-                filename: photo.name || `${requestId}-reference.jpg`,
+                filename: file.name || `${requestId}-reference.jpg`,
                 content: Buffer.from(bytes),
-                contentType: photo.type || "application/octet-stream",
+                contentType: file.type || "application/octet-stream",
             });
         }
+
+        const primaryPhotoPath = photoPaths[0] || null;
+        const primaryPhotoUrl = photoUrls[0] || null;
 
         const { error: updateError } = await supabase
             .from("custom_requests")
             .update({
                 request_id: requestId,
-                photo_path: photoPath,
-                photo_url: photoUrl,
+                photo_path: primaryPhotoPath,
+                photo_url: primaryPhotoUrl,
             })
             .eq("id", insertedRow.id);
 
@@ -154,8 +162,12 @@ export async function POST(req: Request) {
             },
         });
 
-        const emailText = `
-New Loomière Custom Request Submitted
+        const photoUrlsText = photoUrls.length
+            ? photoUrls.map((url, index) => `Photo ${index + 1}: ${url}`).join("\n")
+            : "Not provided";
+
+        const teamEmailText = `
+New Loomeira Custom Request Submitted
 
 Request ID: ${requestId}
 
@@ -173,13 +185,14 @@ Request Details
 Description: ${description || "Not provided"}
 Measurements: ${measurements || "Not provided"}
 Notes: ${notes || "Not provided"}
-Photo Uploaded: ${hasPhoto ? "Yes" : "No"}
-Photo URL: ${photoUrl || "Not provided"}
+Photos Uploaded: ${hasPhotos ? `${uploadedFiles.length}` : "No"}
+Photo URLs:
+${photoUrlsText}
         `.trim();
 
-        const emailHtml = `
+        const teamEmailHtml = `
             <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.6;">
-                <h2 style="margin-bottom: 8px;">New Loomière Custom Request Submitted</h2>
+                <h2 style="margin-bottom: 8px;">New Loomeira Custom Request Submitted</h2>
                 <p style="margin-top: 0;"><strong>Request ID:</strong> ${requestId}</p>
 
                 <h3 style="margin-bottom: 6px;">Customer Details</h3>
@@ -197,9 +210,74 @@ Photo URL: ${photoUrl || "Not provided"}
                     <strong>Description:</strong> ${description || "Not provided"}<br />
                     <strong>Measurements:</strong> ${measurements || "Not provided"}<br />
                     <strong>Notes:</strong> ${notes || "Not provided"}<br />
-                    <strong>Photo Uploaded:</strong> ${hasPhoto ? "Yes" : "No"}<br />
-                    <strong>Photo URL:</strong> ${photoUrl || "Not provided"}
+                    <strong>Photos Uploaded:</strong> ${hasPhotos ? uploadedFiles.length : 0}
                 </p>
+
+                ${photoUrls.length
+                ? `
+                    <h3 style="margin-bottom: 6px;">Photo Links</h3>
+                    <ul>
+                        ${photoUrls
+                    .map(
+                        (url, index) =>
+                            `<li><a href="${url}" target="_blank" rel="noopener noreferrer">Photo ${index + 1}</a></li>`
+                    )
+                    .join("")}
+                    </ul>
+                `
+                : ""}
+            </div>
+        `;
+
+        const customerEmailText = `
+Hello ${firstName},
+
+Thank you for submitting your custom request to Loomeira.
+
+Your request has been received successfully.
+
+Request ID: ${requestId}
+
+Submitted Details
+-----------------
+Product Type: ${productType || "Not provided"}
+Description: ${description || "Not provided"}
+Measurements: ${measurements || "Not provided"}
+Notes: ${notes || "Not provided"}
+Photos Uploaded: ${hasPhotos ? uploadedFiles.length : 0}
+
+A Loomeirite will reach out shortly if there are any questions. Work will begin with an estimated delivery timeline.
+
+With love,
+Loomeira Team
+        `.trim();
+
+        const customerEmailHtml = `
+            <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.7;">
+                <h2 style="margin-bottom: 8px;">Your Loomeira custom request has been received</h2>
+                <p>Hello ${firstName},</p>
+                <p>
+                    Thank you for submitting your custom request to <strong>Loomeira</strong>.
+                    We have received your request successfully.
+                </p>
+
+                <p><strong>Request ID:</strong> ${requestId}</p>
+
+                <div style="margin-top: 16px;">
+                    <strong>Submitted Details</strong><br />
+                    Product Type: ${productType || "Not provided"}<br />
+                    Description: ${description || "Not provided"}<br />
+                    Measurements: ${measurements || "Not provided"}<br />
+                    Notes: ${notes || "Not provided"}<br />
+                    Photos Uploaded: ${hasPhotos ? uploadedFiles.length : 0}
+                </div>
+
+                <p style="margin-top: 16px;">
+                    A Loomeirite will reach out shortly if there are any questions, and your work
+                    will begin with an estimated delivery timeline.
+                </p>
+
+                <p style="margin-top: 20px;">With love,<br />Loomeira Team</p>
             </div>
         `;
 
@@ -207,10 +285,18 @@ Photo URL: ${photoUrl || "Not provided"}
             from: smtpFrom,
             to: recipientEmail,
             replyTo: email,
-            subject: `Loomière Custom Request - ${requestId}`,
-            text: emailText,
-            html: emailHtml,
+            subject: `Loomeira Custom Request - ${requestId}`,
+            text: teamEmailText,
+            html: teamEmailHtml,
             attachments,
+        });
+
+        await transporter.sendMail({
+            from: smtpFrom,
+            to: email,
+            subject: `Loomeira Request Confirmation - ${requestId}`,
+            text: customerEmailText,
+            html: customerEmailHtml,
         });
 
         return Response.json({

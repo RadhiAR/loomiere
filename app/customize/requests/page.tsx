@@ -189,11 +189,13 @@ export default function CustomizeRequestsPage() {
                 <div className="mx-auto max-w-7xl pt-28">
                     <div className="mb-8 text-center">
                         <div className="text-xs uppercase tracking-[0.35em] text-black/45">
-                            LOOMIÈRE CUSTOM REQUESTS
+                            LOOMEIRA CUSTOM REQUESTS
                         </div>
+
                         <h1 className="mt-4 text-4xl italic tracking-tight sm:text-5xl">
                             {headingText}
                         </h1>
+
                         <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-black/65">
                             {isAdmin
                                 ? "Manage all submitted requests, switch views, and assign an owner to each request."
@@ -201,9 +203,15 @@ export default function CustomizeRequestsPage() {
                         </p>
 
                         {submittedId ? (
-                            <div className="mx-auto mt-6 inline-flex rounded-full border border-[#efc5d7] bg-white px-5 py-3 text-sm text-black/75">
-                                Request submitted successfully — ID:
-                                <span className="ml-2 font-semibold">{submittedId}</span>
+                            <div className="mx-auto mt-6 max-w-4xl rounded-[22px] border border-[#efc5d7] bg-white px-5 py-4 text-sm leading-7 text-black/75 shadow-[0_16px_40px_rgba(0,0,0,0.05)]">
+                                <span className="font-semibold text-[#d94b8f]">
+                                    A confirmation email has been sent to your email.
+                                </span>{" "}
+                                A Loomeirite will reach out shortly if there are any questions.
+                                <span className="block pt-1">
+                                    Your request has been submitted successfully with request ID:{" "}
+                                    <span className="font-semibold">{submittedId}</span>
+                                </span>
                             </div>
                         ) : null}
                     </div>
@@ -270,7 +278,6 @@ export default function CustomizeRequestsPage() {
                         <div className="rounded-[28px] border border-[#efc5d7] bg-white/75 p-10 text-center text-black/55 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             {pageMessage}
                         </div>
-
                     ) : filteredItems.length === 0 ? (
                         <div className="rounded-[28px] border border-[#efc5d7] bg-white/75 p-10 text-center text-black/55 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             No requests found for this assignee filter.
@@ -284,7 +291,6 @@ export default function CustomizeRequestsPage() {
                             }
                         >
                             {filteredItems.map((item) => (
-
                                 <div
                                     key={item.request_id || Math.random()}
                                     className={`rounded-[24px] border border-[#efc5d7] bg-white/85 shadow-[0_14px_34px_rgba(0,0,0,0.05)] ${viewMode === "list" ? "p-4" : "p-5"
