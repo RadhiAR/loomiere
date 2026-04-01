@@ -56,10 +56,10 @@ export default function RecentCollectionSection() {
     if (!products.length) return null;
 
     return (
-        <section className="relative bg-[#f8f3ef] px-6 py-16 md:px-10 lg:px-16">
+        <section className="relative bg-[#f8f3ef] px-6 pb-16 pt-4 md:px-10 md:pb-16 md:pt-2 lg:px-16">
             <div className="mx-auto max-w-7xl">
-                <div className="mb-10 text-center">
-                    <p className="mb-3 text-[11px] uppercase tracking-[0.35em] text-black/55">
+                <div className="mb-8 text-center">
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.35em] text-black/55">
                         New
                     </p>
                     <h2 className="text-3xl font-light tracking-[0.04em] text-black md:text-5xl">
@@ -124,36 +124,6 @@ export default function RecentCollectionSection() {
                             </Link>
                         );
                     })}
-                </div>
-
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-                    <Link
-                        href="#apparel"
-                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
-                    >
-                        Shop Apparel
-                    </Link>
-
-                    <Link
-                        href="#pet"
-                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
-                    >
-                        Shop Pet
-                    </Link>
-
-                    <Link
-                        href="#jewellery"
-                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
-                    >
-                        Shop Jewellery
-                    </Link>
-
-                    <Link
-                        href="#home"
-                        className="inline-flex rounded-full border border-black/20 bg-white px-5 py-2 text-[12px] uppercase tracking-[0.22em] text-black transition hover:border-black hover:bg-black hover:text-white"
-                    >
-                        Shop Home
-                    </Link>
                 </div>
             </div>
         </section>

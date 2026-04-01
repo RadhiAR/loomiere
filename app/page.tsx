@@ -1,7 +1,7 @@
 import Link from "next/link";
+
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import CategorySection from "@/components/CategorySection";
 import RecentCollectionSection from "@/components/RecentCollectionSection";
 
 const footerColumns = [
@@ -51,71 +51,143 @@ const footerBottomLinks = [
     { label: "Accessibility", href: "#" },
 ];
 
+const categoryCards = [
+    {
+        label: "Apparel",
+        href: "/shop/apparel",
+        description: "Soft silhouettes, scarves, dresses, and statement knitwear.",
+        image: "/landing-apparel.jpg",
+    },
+    {
+        label: "Home",
+        href: "/shop/home",
+        description: "Handcrafted décor pieces designed to warm your living spaces.",
+        image: "/landing-home.jpg",
+    },
+    {
+        label: "Pet",
+        href: "/shop/pet",
+        description: "Comfortable handmade styles and accessories for your companion.",
+        image: "/landing-pet.jpg",
+    },
+    {
+        label: "Jewellery",
+        href: "/shop/jewellery",
+        description: "Delicate finishing touches with a timeless handcrafted spirit.",
+        image: "/landing-jewellery.jpg",
+    },
+];
+
 export default function HomePage() {
     return (
-        <main className="relative">
+        <main className="relative bg-[#fbf7f3] text-[#2f2928]">
             <Navbar brand="LOOMIÈRE" theme="dark" />
 
             <Hero
                 brandName="LOOMIÈRE"
-                headline={"Exclusive\nHandcrafted\nCollection"}
-                tagline="Elegance in every design"
+                headline={"Crafted\nElegance,\nWoven by Hand"}
+                tagline="Soft luxury in handmade fashion, décor, pet pieces, and jewellery."
                 ctaText="Shop Now"
-                ctaHref="#apparel"
+                ctaHref="#new-arrivals"
                 secondaryCtaText="Know Loomière"
                 secondaryCtaHref="/about"
                 heroImageUrl="/hero.jpg"
             />
 
-            <RecentCollectionSection />
+            <section className="bg-[linear-gradient(135deg,#fff4f8_0%,#fde8f0_35%,#f9d9e8_65%,#f6d1e0_100%)] px-6 py-14 md:px-10 md:py-20 lg:px-16">
+                <div className="mx-auto max-w-[1320px] overflow-hidden rounded-[36px] border border-[#eed6df] bg-white/30 px-6 py-10 shadow-[0_24px_90px_rgba(189,120,146,0.14)] backdrop-blur-sm md:px-10 md:py-14 lg:px-12">
+                    <div className="mb-10 text-center">
+                        <p className="mb-4 text-[11px] uppercase tracking-[0.42em] text-[#a77f8d]">
+                            Shop by Category
+                        </p>
 
-            <CategorySection
-                id="apparel"
-                eyebrow="APPAREL"
-                title={"Tops, Dresses\n& Scarves"}
-                subtitle="Signature silhouettes and seasonal layers — sweaters, tops, dresses, and scarves crafted with texture and softness."
-                ctaText="Shop Apparel"
-                ctaHref="/shop/apparel"
-                ctaNewTab={true}
-                backgroundImageUrl="/landing-apparel.jpg"
-            />
+                        <h2 className="mx-auto max-w-4xl text-3xl font-light leading-[1.15] text-[#2f2928] md:text-5xl">
+                            Explore each collection through a softer, more luxurious lens.
+                        </h2>
 
-            <CategorySection
-                id="home"
-                eyebrow="HOME DÉCOR"
-                title={"Woven Living\nEssentials"}
-                subtitle="Coasters, curtains, table accents, and handcrafted décor — designed to warm up every corner of your space."
-                ctaText="Shop Home"
-                ctaHref="/shop/home"
-                ctaNewTab={true}
-                backgroundImageUrl="/landing-home.jpg"
-            />
+                        <p className="mx-auto mt-5 max-w-3xl text-[15px] leading-8 text-[#6f615f] md:text-[16px]">
+                            Discover handcrafted apparel, elegant home décor, charming pet
+                            essentials, and jewellery designed with a refined Loomeira touch.
+                        </p>
+                    </div>
 
-            <CategorySection
-                id="pet"
-                eyebrow="PET"
-                title={"For Your Dog\nIn Style"}
-                subtitle="Collars, cozy sweaters and accessories — handmade for comfort, fit, and everyday charm."
-                ctaText="Shop Pet"
-                ctaHref="/shop/pet"
-                ctaNewTab={true}
-                backgroundImageUrl="/landing-pet.jpg"
-            />
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                        {categoryCards.map((item) => (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="group relative min-h-[420px] overflow-hidden rounded-[28px] border border-white/50 shadow-[0_18px_50px_rgba(157,100,116,0.12)] transition duration-300 hover:-translate-y-1"
+                            >
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
+                                    style={{ backgroundImage: `url(${item.image})` }}
+                                />
+                                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(34,24,27,0.08)_0%,rgba(34,24,27,0.28)_45%,rgba(20,12,16,0.62)_100%)]" />
 
-            <CategorySection
-                id="jewellery"
-                eyebrow="HANDCRAFTED JEWELLERY"
-                title={"Small Details,\nBig Elegance"}
-                subtitle="Handmade jewellery designed to pair with your everyday — refined, minimal, and quietly luxurious."
-                ctaText="Shop Jewellery"
-                ctaHref="/shop/jewellery"
-                ctaNewTab={true}
-                backgroundImageUrl="/landing-jewellery.jpg"
-            />
+                                <div className="relative z-10 flex h-full flex-col justify-end p-6 text-white md:p-7">
+                                    <p className="mb-3 text-[11px] uppercase tracking-[0.34em] text-white/80">
+                                        Collection
+                                    </p>
 
-            <section className="bg-[#f7f4f1] pb-0 pt-20">
-                <div className="mx-auto max-w-[1400px] overflow-hidden rounded-t-[36px] border border-black/8 bg-[#f3f1ef]">
+                                    <h3 className="text-3xl font-light tracking-[0.01em]">
+                                        {item.label}
+                                    </h3>
+
+                                    <p className="mt-3 max-w-[280px] text-[15px] leading-7 text-white/88">
+                                        {item.description}
+                                    </p>
+
+                                    <span className="mt-6 inline-flex w-fit items-center rounded-full border border-white/60 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.28em] text-white backdrop-blur-sm transition group-hover:bg-white/18">
+                                        Explore
+                                    </span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section
+                id="new-arrivals"
+                className="bg-[linear-gradient(135deg,#fff4f8_0%,#fde8f0_35%,#f9d9e8_65%,#f6d1e0_100%)] pb-10 pt-10 md:pt-14"
+            >
+                <div className="mx-auto max-w-[1240px] px-6 md:px-10 lg:px-16">
+                    <div className="mb-8 text-center">
+                        <p className="mb-3 text-[11px] uppercase tracking-[0.38em] text-[#ad8a93]">
+                            New Arrivals
+                        </p>
+                        <h2 className="text-3xl font-light text-[#2f2928] md:text-4xl">
+                            Newly added pieces from the latest collection
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-8 text-[#6f615f]">
+                            A flowing edit of recent uploads, presented with a lighter, more
+                            editorial feel while keeping your current product functionality
+                            unchanged.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mx-auto max-w-[1320px] px-4 md:px-6 lg:px-8">
+                    <div className="rounded-[32px] bg-white/35 backdrop-blur-sm">
+                        <RecentCollectionSection />
+                    </div>
+                </div>
+            </section>
+
+
+            <section className="relative bg-[linear-gradient(135deg,#fff4f8_0%,#fde8f0_35%,#f9d9e8_65%,#f6d1e0_100%)] px-6 pb-16 pt-4 md:px-10 md:pb-16 md:pt-2 lg:px-16">
+                <div className="mx-auto max-w-[1400px] overflow-hidden rounded-t-[36px] border border-[#ead3dc] bg-white/35 backdrop-blur-sm">
                     <div className="border-b border-black/10 px-6 py-14 md:px-12 lg:px-16">
+                        <div className="mb-12 max-w-3xl">
+                            <p className="mb-3 text-[11px] uppercase tracking-[0.34em] text-black/45">
+                                Soft Luxury, Handmade
+                            </p>
+                            <h2 className="text-3xl font-light leading-tight text-black md:text-4xl">
+                                Crafted collections for fashion, home, pets, and everyday
+                                beauty.
+                            </h2>
+                        </div>
+
                         <div className="grid gap-12 md:grid-cols-2 xl:grid-cols-4">
                             {footerColumns.map((column) => (
                                 <div key={column.title}>
@@ -162,8 +234,10 @@ export default function HomePage() {
                             <div className="text-3xl font-semibold tracking-[0.16em] text-black md:text-4xl">
                                 LOOMEIRA
                             </div>
+
                             <p className="mt-5 text-sm text-black/55">
-                                © {new Date().getFullYear()} Loomière by RADHIKA ADDANKI. All rights reserved.
+                                © {new Date().getFullYear()} Loomière by RADHIKA ADDANKI. All
+                                rights reserved.
                             </p>
                         </div>
                     </div>
