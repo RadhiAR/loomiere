@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
@@ -230,18 +231,25 @@ export default function HomePage() {
                         </div>
 
                         <div className="mt-12 border-t border-black/10 pt-10 text-center">
-                            <div className="text-[42px] font-serif font-medium tracking-[0.08em] text-black md:text-[64px]">
-                                LMRA
-                            </div>
+                            <div className="mx-auto flex flex-col items-center justify-center">
+                                <div className="relative h-[280px] w-[280px] md:h-[340px] md:w-[340px]">
+                                    <Image
+                                        src="/loomeira-logo.png"
+                                        alt="Loomeira logo"
+                                        fill
+                                        className="object-contain"
+                                        style={{
+                                            filter:
+                                                "brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%)",
+                                        }}
+                                    />
+                                </div>
 
-                            <div className="mt-3 text-[10px] uppercase tracking-[0.6em] text-black/60 md:text-[11px]">
-                                LOOMEIRA
+                                <p className="mt-2 text-sm text-black/55">
+                                    © {new Date().getFullYear()}Loomèira. All
+                                    rights reserved.
+                                </p>
                             </div>
-
-                            <p className="mt-5 text-sm text-black/55">
-                                © {new Date().getFullYear()} Loomière by RADHIKA ADDANKI. All
-                                rights reserved.
-                            </p>
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import BackButton from "@/components/BackButton";
 import { readAdminKey } from "@/lib/admin-session";
 
 const categories = [
@@ -178,14 +179,15 @@ export default function UploadProductsPage() {
     return (
         <>
             <Navbar theme="light" />
+            <BackButton href="/" label="Back" theme="light" />
 
             <main className="min-h-screen bg-[#fdf1f6]">
-                <div className="max-w-3xl mx-auto px-6 pt-28 pb-10">
-                    <h1 className="text-3xl font-semibold mb-8">Upload your products</h1>
+                <div className="mx-auto max-w-3xl px-6 pt-32 pb-10">
+                    <h1 className="mb-8 text-3xl font-semibold">Upload your products</h1>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <input
-                            className="w-full border rounded-lg p-3"
+                            className="w-full rounded-lg border p-3"
                             placeholder="Product name"
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -193,19 +195,21 @@ export default function UploadProductsPage() {
 
                         <div>
                             <textarea
-                                className="w-full border rounded-lg p-3"
+                                className="w-full rounded-lg border p-3"
                                 placeholder="Description (max 200 characters)"
                                 maxLength={200}
                                 value={form.description}
-                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                onChange={(e) =>
+                                    setForm({ ...form, description: e.target.value })
+                                }
                             />
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="mt-1 text-sm text-gray-500">
                                 {form.description.length}/200
                             </p>
                         </div>
 
                         <select
-                            className="w-full border rounded-lg p-3"
+                            className="w-full rounded-lg border p-3"
                             value={form.category}
                             onChange={(e) => setForm({ ...form, category: e.target.value })}
                         >
@@ -218,7 +222,7 @@ export default function UploadProductsPage() {
                         </select>
 
                         <input
-                            className="w-full border rounded-lg p-3"
+                            className="w-full rounded-lg border p-3"
                             type="number"
                             step="0.01"
                             placeholder="Price"
@@ -227,7 +231,7 @@ export default function UploadProductsPage() {
                         />
 
                         <input
-                            className="w-full border rounded-lg p-3"
+                            className="w-full rounded-lg border p-3"
                             type="date"
                             value={form.ready_to_ship_date}
                             onChange={(e) =>
@@ -235,9 +239,9 @@ export default function UploadProductsPage() {
                             }
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <input
-                                className="w-full border rounded-lg p-3"
+                                className="w-full rounded-lg border p-3"
                                 type="number"
                                 step="0.01"
                                 placeholder="Discount value"
@@ -248,7 +252,7 @@ export default function UploadProductsPage() {
                             />
 
                             <select
-                                className="w-full border rounded-lg p-3"
+                                className="w-full rounded-lg border p-3"
                                 value={form.discount_type}
                                 onChange={(e) =>
                                     setForm({ ...form, discount_type: e.target.value })
@@ -264,11 +268,11 @@ export default function UploadProductsPage() {
                         </div>
 
                         <div>
-                            <label className="block mb-2 font-medium">
+                            <label className="mb-2 block font-medium">
                                 Upload photos and videos
                             </label>
                             <input
-                                className="w-full border rounded-lg p-3"
+                                className="w-full rounded-lg border p-3"
                                 type="file"
                                 multiple
                                 accept="image/*,video/*"
@@ -279,7 +283,7 @@ export default function UploadProductsPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="rounded-xl px-6 py-3 bg-pink-600 text-white hover:bg-pink-700 disabled:opacity-50"
+                            className="rounded-xl bg-pink-600 px-6 py-3 text-white hover:bg-pink-700 disabled:opacity-50"
                         >
                             {loading ? "Saving..." : "Save"}
                         </button>

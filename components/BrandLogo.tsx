@@ -14,42 +14,52 @@ export default function BrandLogo({
     variant = "light",
     className = "",
 }: BrandLogoProps) {
-
     const sizeMap = {
         sm: {
-            width: 180,
-            height: 110,
+            width: 150,
+            height: 150,
         },
         md: {
-            width: 220,
-            height: 135,
+            width: 190,
+            height: 190,
         },
         lg: {
-            width: 260,
-            height: 160,
+            width: 230,
+            height: 230,
         },
     } as const;
 
     const selected = sizeMap[size];
-    const logoSrc =
-        variant === "light"
-            ? "/loomeira-logo.png"
-            : "/loomeira-logo-black.png";
+    const isPinkVariant = variant === "dark";
 
     return (
         <Link
             href={href}
-            className={`inline-flex items-center justify-center select-none ${className}`}
             aria-label="Loomeira home"
+            className={`inline-flex shrink-0 items-start justify-start self-start ${className}`}
         >
-            <Image
-                src={logoSrc}
-                alt="Loomeira logo"
-                width={selected.width}
-                height={selected.height}
-                priority
-                className="h-auto w-auto object-contain"
-            />
+            <span
+                className="relative block"
+                style={{
+                    width: `${selected.width}px`,
+                    height: `${selected.height}px`,
+                }}
+            >
+                <Image
+                    src="/loomeira-logo.png"
+                    alt="Loomeira logo"
+                    fill
+                    priority
+                    sizes={`${selected.width}px`}
+                    className="pointer-events-none select-none object-contain object-left-top"
+                    style={{
+                        objectPosition: "left top",
+                        filter: isPinkVariant
+                            ? "brightness(0) saturate(100%) invert(45%) sepia(84%) saturate(1865%) hue-rotate(304deg) brightness(97%) contrast(94%)"
+                            : "none",
+                    }}
+                />
+            </span>
         </Link>
     );
 }

@@ -664,16 +664,18 @@ export default function Navbar({ theme = "dark" }: Props) {
                 <div className="fixed inset-0 z-[3000]">
                     <div className="absolute inset-0 bg-black/35" onClick={() => setMenuOpen(false)} />
                     <aside className="absolute right-0 top-0 h-full w-[320px] overflow-y-auto border-l border-[#f2cddd] bg-[#fff7fa] shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-[#f2cddd] px-5 py-5">
-                            <div>
-                                <BrandLogo href="/" size="sm" variant="dark" />
-                                <div className="mt-2 text-sm text-black/55">Menu</div>
+                        <div className="flex items-start justify-between border-b border-[#f2cddd] px-5 pt-4 pb-4">
+                            <div className="flex flex-col items-start justify-start">
+                                <div className="flex items-start justify-start">
+                                    <BrandLogo href="/" size="lg" variant="dark" className="block !m-0 !p-0" />
+                                </div>
+                                <div className="-mt-1 text-sm font-medium text-black/55">Loomèira Menu</div>
                             </div>
 
                             <button
                                 type="button"
                                 onClick={() => setMenuOpen(false)}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#efc5d7] bg-white text-black/65 transition hover:bg-[#ffe3ee]"
+                                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#efc5d7] bg-white text-black/65 transition hover:bg-[#ffe3ee]"
                                 aria-label="Close menu"
                             >
                                 <CloseIcon />

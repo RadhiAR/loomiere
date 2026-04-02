@@ -152,7 +152,7 @@ export default function AboutPage() {
 
                                 <p className="text-base leading-8 md:text-lg md:leading-9">
                                     Loomeira was started by{" "}
-                                    <span className="font-semibold">Radhika Adddanki</span> as an
+                                    <span className="font-semibold">Radhika Addanki</span> as an
                                     initiative to create a platform where people, especially women
                                     and kids, can learn, create, and grow from home 🌸. With just
                                     a computer, iPad, or mobile phone, anyone can begin this
@@ -212,46 +212,9 @@ export default function AboutPage() {
                         </div>
                     </section>
 
-                    {/* FOUNDER SECTION */}
-                    <section className="mt-20 md:mt-28">
-                        <div className="rounded-[32px] bg-white/72 p-8 shadow-lg backdrop-blur-sm md:p-12">
-                            <div className="max-w-5xl text-[#4b2940]">
-                                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-[#b25a87]">
-                                    Founder
-                                </p>
-
-                                <h2 className="mb-5 text-3xl font-medium md:text-5xl">
-                                    Radhika Adddanki
-                                </h2>
-
-                                <p className="text-base leading-8 md:text-lg md:leading-9">
-                                    Loomeira was founded by Radhika Adddanki with a vision to
-                                    create a space where creativity becomes independence ✨. The
-                                    idea was simple — to build a platform where anyone,
-                                    especially women and kids, can learn from home, create
-                                    something meaningful, and turn it into an opportunity 💖
-                                </p>
-
-                                <p className="mt-5 text-base leading-8 md:text-lg md:leading-9">
-                                    What makes Loomeira special is that it brings everything
-                                    together — learning, making, and selling — in one place 🌸.
-                                    It is designed to remove barriers and make creative work
-                                    accessible to everyone, no matter their background or
-                                    experience.
-                                </p>
-
-                                <p className="mt-5 text-base leading-8 md:text-lg md:leading-9">
-                                    Loomeira is more than just a platform — it is a growing
-                                    community where ideas turn into creations, and creations turn
-                                    into confidence, income, and inspiration 🌈
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-
                     {/* FOOTER */}
                     <footer className="pb-6 pt-16 text-center text-sm text-[#7b5267] md:pt-20">
-                        © {new Date().getFullYear()} Loomière by RADHIKA ADDANKI. All
+                        © {new Date().getFullYear()} Loomèira. All
                         rights reserved.
                     </footer>
                 </div>
