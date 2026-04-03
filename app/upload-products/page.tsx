@@ -107,14 +107,15 @@ export default function UploadProductsPage() {
 
             if (files && files.length > 0) {
                 for (const file of Array.from(files)) {
-                    const fileName = `${Date.now()}-${file.name}`;
+                    const safeFileName = file.name.replace(/\s+/g, "-");
+                    const fileName = `${Date.now()}-${safeFileName}`;
 
                     const { error: uploadError } = await supabase.storage
                         .from("product-media")
                         .upload(fileName, file);
 
                     if (uploadError) {
-                        throw new Error(uploadError.message);
+                        throw new Error(`Media upload failed: ${uploadError.message}`);
                     }
 
                     const { data } = supabase.storage
@@ -133,9 +134,9 @@ export default function UploadProductsPage() {
                 .replace(/\s+/g, "-");
 
             const payload = {
-                name: form.name,
+                name: form.name.trim(),
                 slug: `${slugBase}-${Date.now()}`,
-                description: form.description,
+                description: form.description.trim(),
                 category: form.category,
                 price: Number(form.price),
                 stock: 1,
@@ -157,10 +158,16 @@ export default function UploadProductsPage() {
                 body: JSON.stringify(payload),
             });
 
-            const data = await res.json();
+            let data: { error?: string; success?: boolean } | null = null;
+
+            try {
+                data = await res.json();
+            } catch {
+                data = null;
+            }
 
             if (!res.ok) {
-                throw new Error(data.error || "Failed to save product");
+                throw new Error(data?.error || "Failed to save product");
             }
 
             incrementAdminUsageCount();
@@ -170,7 +177,13 @@ export default function UploadProductsPage() {
             router.refresh();
         } catch (error) {
             console.error(error);
-            alert("Something went wrong while uploading the product.");
+
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong while uploading the product.";
+
+            alert(message);
         } finally {
             setLoading(false);
         }
