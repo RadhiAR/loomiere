@@ -230,9 +230,9 @@ export default function HomePage() {
                             </div>
                         </div>
 
-                        <div className="mt-12 border-t border-black/10 pt-10 text-center">
+                        <div className="mt-8 border-t border-black/10 pt-6 text-center">
                             <div className="mx-auto flex flex-col items-center justify-center">
-                                <div className="relative h-[280px] w-[280px] md:h-[340px] md:w-[340px]">
+                                <div className="relative h-[140px] w-[140px] md:h-[180px] md:w-[180px]">
                                     <Image
                                         src="/loomeira-logo.png"
                                         alt="Loomeira logo"
@@ -246,8 +246,7 @@ export default function HomePage() {
                                 </div>
 
                                 <p className="mt-2 text-sm text-black/55">
-                                    © {new Date().getFullYear()}Loomèira. All
-                                    rights reserved.
+                                    © {new Date().getFullYear()} Loomèira. All rights reserved.
                                 </p>
                             </div>
                         </div>
