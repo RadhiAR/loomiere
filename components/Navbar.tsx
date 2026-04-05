@@ -612,12 +612,14 @@ export default function Navbar({ theme = "dark" }: Props) {
         <>
             <header className="fixed left-0 right-0 top-0 z-[2000]">
                 <div className="flex w-full items-start justify-between px-10 pt-4 pb-6 lg:px-16">
-                    <BrandLogo
-                        href="/"
-                        size="md"
-                        variant={isDark ? "light" : "dark"}
-                        className="-mt-2"
-                    />
+                    <div style={{ marginLeft: "-28px" }}>
+                        <BrandLogo
+                            href="/"
+                            size="lg"
+                            variant={isDark ? "light" : "dark"}
+                            className="!m-0 !block !p-0"
+                        />
+                    </div>
 
                     <div className="flex items-start gap-4 pt-1">
                         <Link href="/orders" className={pill}>
@@ -664,12 +666,17 @@ export default function Navbar({ theme = "dark" }: Props) {
                 <div className="fixed inset-0 z-[3000]">
                     <div className="absolute inset-0 bg-black/35" onClick={() => setMenuOpen(false)} />
                     <aside className="absolute right-0 top-0 h-full w-[320px] overflow-y-auto border-l border-[#f2cddd] bg-[#fff7fa] shadow-2xl">
-                        <div className="flex items-start justify-between border-b border-[#f2cddd] px-5 pt-4 pb-4">
-                            <div className="flex flex-col items-start justify-start">
-                                <div className="flex items-start justify-start">
-                                    <BrandLogo href="/" size="lg" variant="dark" className="block !m-0 !p-0" />
+                        <div className="flex items-start justify-between border-b border-[#f2cddd] pr-5 pt-3 pb-4">
+                            <div className="flex flex-col items-start pl-7">
+                                <BrandLogo
+                                    href="/"
+                                    size="lg"
+                                    variant="dark"
+                                    className="!m-0 !block !p-0"
+                                />
+                                <div className="-mt-2 text-sm font-medium text-black/55">
+                                    Loomèira Menu
                                 </div>
-                                <div className="-mt-1 text-sm font-medium text-black/55">Loomèira Menu</div>
                             </div>
 
                             <button

@@ -16,16 +16,22 @@ export default function BrandLogo({
 }: BrandLogoProps) {
     const sizeMap = {
         sm: {
-            width: 150,
-            height: 150,
+            frameWidth: 132,
+            frameHeight: 92,
+            imageWidth: 150,
+            shiftX: -14,
         },
         md: {
-            width: 190,
-            height: 190,
+            frameWidth: 168,
+            frameHeight: 116,
+            imageWidth: 190,
+            shiftX: -18,
         },
         lg: {
-            width: 230,
-            height: 230,
+            frameWidth: 202,
+            frameHeight: 140,
+            imageWidth: 230,
+            shiftX: -22,
         },
     } as const;
 
@@ -36,29 +42,38 @@ export default function BrandLogo({
         <Link
             href={href}
             aria-label="Loomeira home"
-            className={`inline-flex shrink-0 items-start justify-start self-start ${className}`}
+            className={`inline-flex shrink-0 items-start justify-start self-start leading-none ${className}`}
         >
             <span
-                className="relative block"
+                className="relative block overflow-hidden"
                 style={{
-                    width: `${selected.width}px`,
-                    height: `${selected.height}px`,
+                    width: `${selected.frameWidth}px`,
+                    height: `${selected.frameHeight}px`,
                 }}
             >
-                <Image
-                    src="/loomeira-logo.png"
-                    alt="Loomeira logo"
-                    fill
-                    priority
-                    sizes={`${selected.width}px`}
-                    className="pointer-events-none select-none object-contain object-left-top"
+                <span
+                    className="absolute top-0"
                     style={{
-                        objectPosition: "left top",
-                        filter: isPinkVariant
-                            ? "brightness(0) saturate(100%) invert(45%) sepia(84%) saturate(1865%) hue-rotate(304deg) brightness(97%) contrast(94%)"
-                            : "none",
+                        left: `${selected.shiftX}px`,
+                        width: `${selected.imageWidth}px`,
+                        height: "100%",
                     }}
-                />
+                >
+                    <Image
+                        src="/loomeira-logo.png"
+                        alt="Loomeira logo"
+                        fill
+                        priority
+                        sizes={`${selected.imageWidth}px`}
+                        className="pointer-events-none select-none object-contain object-left-top"
+                        style={{
+                            objectPosition: "left top",
+                            filter: isPinkVariant
+                                ? "brightness(0) saturate(100%) invert(45%) sepia(84%) saturate(1865%) hue-rotate(304deg) brightness(97%) contrast(94%)"
+                                : "none",
+                        }}
+                    />
+                </span>
             </span>
         </Link>
     );
