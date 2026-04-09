@@ -1,9 +1,36 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import RecentCollectionSection from "@/components/RecentCollectionSection";
+
+type StoredUser = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    username: string;
+    password: string;
+    createdAt: string;
+};
+
+type StoredAdminUser = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    password: string;
+    createdAt: string;
+};
+
+const USERS_KEY = "loomiere_auth_users_v1";
+const ADMIN_USERS_KEY = "loomiere_admin_users_v1";
 
 const footerColumns = [
     {
@@ -79,7 +106,47 @@ const categoryCards = [
     },
 ];
 
+function readStoredArray<T>(key: string): T[] {
+    if (typeof window === "undefined") return [];
+
+    try {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
 export default function HomePage() {
+    const [userCount, setUserCount] = useState(0);
+    const [adminCount, setAdminCount] = useState(0);
+
+    useEffect(() => {
+        const refreshCounts = () => {
+            const users = readStoredArray<StoredUser>(USERS_KEY);
+            const admins = readStoredArray<StoredAdminUser>(ADMIN_USERS_KEY);
+
+            setUserCount(users.length);
+            setAdminCount(admins.length);
+        };
+
+        refreshCounts();
+
+        window.addEventListener("storage", refreshCounts);
+        window.addEventListener("focus", refreshCounts);
+        window.addEventListener("loomiere-auth-changed", refreshCounts as EventListener);
+        window.addEventListener("loomiere-admin-changed", refreshCounts as EventListener);
+
+        return () => {
+            window.removeEventListener("storage", refreshCounts);
+            window.removeEventListener("focus", refreshCounts);
+            window.removeEventListener("loomiere-auth-changed", refreshCounts as EventListener);
+            window.removeEventListener("loomiere-admin-changed", refreshCounts as EventListener);
+        };
+    }, []);
+
     return (
         <main className="relative min-h-screen bg-white text-[#2f2928]">
             <Navbar brand="LMRA" theme="dark" />
@@ -170,6 +237,51 @@ export default function HomePage() {
                     <div className="overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] shadow-[0_20px_70px_rgba(0,0,0,0.05)]">
                         <div className="bg-[#fdf6f8]">
                             <RecentCollectionSection />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="bg-white px-6 pb-10 pt-2 md:px-10 md:pb-12 lg:px-16">
+                <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] px-6 py-10 shadow-[0_20px_70px_rgba(0,0,0,0.05)] md:px-10 md:py-12 lg:px-12">
+                    <div className="text-center">
+                        <p className="mb-3 text-[11px] uppercase tracking-[0.34em] text-[#a77f8d]">
+                            Loomeira Community
+                        </p>
+                        <h2 className="mx-auto max-w-3xl text-3xl font-light leading-[1.2] text-[#2f2928] md:text-4xl">
+                            A growing circle of creators, shoppers, and subscriber admins.
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-8 text-[#6f615f]">
+                            See how many user profiles and admin subscriber accounts have been
+                            created in Loomeira.
+                        </p>
+                    </div>
+
+                    <div className="mt-10 grid gap-6 md:grid-cols-2">
+                        <div className="rounded-[28px] border border-[#eadfe3] bg-white/80 px-6 py-8 text-center shadow-[0_12px_35px_rgba(157,100,116,0.08)]">
+                            <p className="text-[11px] uppercase tracking-[0.32em] text-[#ad8a93]">
+                                Admin Users
+                            </p>
+                            <div className="mt-4 text-5xl font-light text-[#2f2928] md:text-6xl">
+                                {adminCount}
+                            </div>
+                            <p className="mt-3 text-[15px] leading-7 text-[#6f615f]">
+                                Subscriber admin accounts registered for managing products and
+                                platform activity.
+                            </p>
+                        </div>
+
+                        <div className="rounded-[28px] border border-[#eadfe3] bg-white/80 px-6 py-8 text-center shadow-[0_12px_35px_rgba(157,100,116,0.08)]">
+                            <p className="text-[11px] uppercase tracking-[0.32em] text-[#ad8a93]">
+                                Normal Users
+                            </p>
+                            <div className="mt-4 text-5xl font-light text-[#2f2928] md:text-6xl">
+                                {userCount}
+                            </div>
+                            <p className="mt-3 text-[15px] leading-7 text-[#6f615f]">
+                                Shopper accounts created for browsing, ordering, and engaging
+                                with the Loomeira experience.
+                            </p>
                         </div>
                     </div>
                 </div>
