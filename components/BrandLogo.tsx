@@ -60,7 +60,7 @@ export default function BrandLogo({
                     }}
                 >
                     <Image
-                        src="/loomeira-logo.png"
+                        src="/yarn-logo.png"
                         alt="Loomeira logo"
                         fill
                         priority
