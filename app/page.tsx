@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import RecentCollectionSection from "@/components/RecentCollectionSection";
+import { supabase } from "@/lib/supabase";
 
 type StoredUser = {
     id: string;
@@ -124,26 +125,76 @@ export default function HomePage() {
     const [adminCount, setAdminCount] = useState(0);
 
     useEffect(() => {
-        const refreshCounts = () => {
+        const refreshCounts = async () => {
             const users = readStoredArray<StoredUser>(USERS_KEY);
             const admins = readStoredArray<StoredAdminUser>(ADMIN_USERS_KEY);
 
-            setUserCount(users.length);
-            setAdminCount(admins.length);
+            const shopperRows = users.map((user) => ({
+                id: user.id,
+                role: "shopper",
+                first_name: user.firstName?.trim() || null,
+                last_name: user.lastName?.trim() || null,
+                phone: user.phone?.trim() || null,
+                email: user.email?.trim().toLowerCase() || null,
+                username: user.username?.trim() || null,
+                created_at: user.createdAt || new Date().toISOString(),
+            }));
+
+            const adminRows = admins.map((admin) => ({
+                id: admin.id,
+                role: "admin",
+                first_name: admin.firstName?.trim() || null,
+                last_name: admin.lastName?.trim() || null,
+                phone: null,
+                email: admin.email?.trim().toLowerCase() || null,
+                username: admin.username?.trim() || null,
+                created_at: admin.createdAt || new Date().toISOString(),
+            }));
+
+            const rowsToSync = [...shopperRows, ...adminRows];
+
+            if (rowsToSync.length > 0) {
+                await supabase.from("community_users").upsert(rowsToSync, {
+                    onConflict: "id",
+                });
+            }
+
+            const { count: shopperCount, error: shopperError } = await supabase
+                .from("community_users")
+                .select("*", { count: "exact", head: true })
+                .eq("role", "shopper");
+
+            const { count: adminUserCount, error: adminError } = await supabase
+                .from("community_users")
+                .select("*", { count: "exact", head: true })
+                .eq("role", "admin");
+
+            if (shopperError || adminError) {
+                setUserCount(users.length);
+                setAdminCount(admins.length);
+                return;
+            }
+
+            setUserCount(shopperCount || 0);
+            setAdminCount(adminUserCount || 0);
         };
 
         refreshCounts();
 
-        window.addEventListener("storage", refreshCounts);
-        window.addEventListener("focus", refreshCounts);
-        window.addEventListener("loomiere-auth-changed", refreshCounts as EventListener);
-        window.addEventListener("loomiere-admin-changed", refreshCounts as EventListener);
+        const handleRefresh = () => {
+            refreshCounts();
+        };
+
+        window.addEventListener("storage", handleRefresh);
+        window.addEventListener("focus", handleRefresh);
+        window.addEventListener("loomiere-auth-changed", handleRefresh as EventListener);
+        window.addEventListener("loomiere-admin-changed", handleRefresh as EventListener);
 
         return () => {
-            window.removeEventListener("storage", refreshCounts);
-            window.removeEventListener("focus", refreshCounts);
-            window.removeEventListener("loomiere-auth-changed", refreshCounts as EventListener);
-            window.removeEventListener("loomiere-admin-changed", refreshCounts as EventListener);
+            window.removeEventListener("storage", handleRefresh);
+            window.removeEventListener("focus", handleRefresh);
+            window.removeEventListener("loomiere-auth-changed", handleRefresh as EventListener);
+            window.removeEventListener("loomiere-admin-changed", handleRefresh as EventListener);
         };
     }, []);
 
@@ -162,7 +213,7 @@ export default function HomePage() {
                 heroImageUrl="/hero.jpg"
             />
 
-            <section className="bg-white px-6 py-14 md:px-10 md:py-20 lg:px-16">
+            <section className="bg-white px-6 pt-14 pb-4 md:px-10 md:pt-20 md:pb-4 lg:px-16">
                 <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] px-6 py-10 shadow-[0_20px_70px_rgba(0,0,0,0.05)] md:px-10 md:py-14 lg:px-12">
                     <div className="mb-10 text-center">
                         <p className="mb-4 text-[11px] uppercase tracking-[0.42em] text-[#a77f8d]">
