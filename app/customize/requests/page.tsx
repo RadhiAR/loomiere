@@ -196,9 +196,9 @@ export default function CustomizeRequestsPage() {
                             {headingText}
                         </h1>
 
-                        <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-black/65">
+                        <p className="mx-auto mt-4 max-w-4xl text-base leading-8 text-black/65">
                             {isAdmin
-                                ? "Manage all submitted requests, switch views, and assign an owner to each request."
+                                ? "This page contains all the requests submitted by Loomeira shoppers for their desired products. Every submitted request appears here, and a user can assign a ticket to their own user name, begin working on it, and connect with the shopper through Loomeira MILAN to continue the conversation."
                                 : "Track every request submitted from this browser."}
                         </p>
 
@@ -248,8 +248,8 @@ export default function CustomizeRequestsPage() {
                                         type="button"
                                         onClick={() => setViewMode("grid")}
                                         className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "grid"
-                                            ? "bg-[#ef5f9a] text-white"
-                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                                ? "bg-[#ef5f9a] text-white"
+                                                : "border border-[#efc5d7] bg-white text-black/65"
                                             }`}
                                     >
                                         Grid View
@@ -259,8 +259,8 @@ export default function CustomizeRequestsPage() {
                                         type="button"
                                         onClick={() => setViewMode("list")}
                                         className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "list"
-                                            ? "bg-[#ef5f9a] text-white"
-                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                                ? "bg-[#ef5f9a] text-white"
+                                                : "border border-[#efc5d7] bg-white text-black/65"
                                             }`}
                                     >
                                         List View
@@ -287,65 +287,43 @@ export default function CustomizeRequestsPage() {
                             className={
                                 viewMode === "grid"
                                     ? "grid gap-5 md:grid-cols-2 xl:grid-cols-3"
-                                    : "grid gap-4"
+                                    : "grid gap-3"
                             }
                         >
-                            {filteredItems.map((item) => (
-                                <div
-                                    key={item.request_id || Math.random()}
-                                    className={`rounded-[24px] border border-[#efc5d7] bg-white/85 shadow-[0_14px_34px_rgba(0,0,0,0.05)] ${viewMode === "list" ? "p-4" : "p-5"
-                                        }`}
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <div className="truncate text-[11px] uppercase tracking-[0.24em] text-black/45">
-                                                {item.request_id || "Pending ID"}
-                                            </div>
-                                            <div className="mt-2 text-lg font-medium leading-7 text-black/85">
-                                                {[item.first_name, item.last_name].filter(Boolean).join(" ")}
-                                            </div>
-                                            <div className="mt-1 truncate text-sm text-black/55">
-                                                {item.email || "No email"}
-                                            </div>
-                                        </div>
-
-                                        <span className="inline-flex shrink-0 rounded-full bg-[#ef5f9a] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white">
-                                            {item.status || "submitted"}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-4 grid gap-4">
-                                        {item.photo_url ? (
-                                            <img
-                                                src={item.photo_url}
-                                                alt={item.request_id || "Request image"}
-                                                className={`w-full rounded-[18px] border border-[#efc5d7] bg-white object-cover ${viewMode === "list" ? "h-[180px]" : "h-[220px]"
-                                                    }`}
-                                            />
-                                        ) : null}
-
-                                        <div className="grid gap-3">
-                                            <CompactDetail label="Product Type" value={item.product_type} />
-                                            <CompactDetail label="Description" value={item.description} clamp />
-                                            <CompactDetail label="Measurements" value={item.measurements} clamp />
-                                            <CompactDetail label="Notes" value={item.notes} clamp />
-                                        </div>
-
-                                        <div className="grid gap-3 rounded-[18px] border border-[#efc5d7] bg-[#fff9fc] p-4 text-sm text-black/65">
-                                            <div>
-                                                <span className="font-medium text-black/75">Created:</span>{" "}
-                                                {formatDate(item.created_at)}
-                                            </div>
-                                            <div>
-                                                <span className="font-medium text-black/75">Updated:</span>{" "}
-                                                {formatDate(item.updated_at)}
-                                            </div>
-
-                                            {isAdmin ? (
-                                                <div className="pt-1">
-                                                    <div className="mb-2 text-[11px] uppercase tracking-[0.18em] text-black/45">
-                                                        Assignee
+                            {filteredItems.map((item) =>
+                                viewMode === "list" ? (
+                                    <div
+                                        key={item.request_id || Math.random()}
+                                        className="cursor-pointer rounded-[20px] border border-[#efc5d7] bg-white/90 px-4 py-4 shadow-[0_10px_28px_rgba(0,0,0,0.04)] transition hover:-translate-y-[1px] hover:bg-[#fff9fc] hover:shadow-[0_14px_34px_rgba(0,0,0,0.06)]"
+                                    >
+                                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:gap-4">
+                                                    <div className="truncate text-[11px] uppercase tracking-[0.22em] text-black/45 lg:max-w-[290px]">
+                                                        {item.request_id || "Pending ID"}
                                                     </div>
+
+                                                    <div className="truncate text-base font-medium leading-6 text-black/85">
+                                                        {[item.first_name, item.last_name].filter(Boolean).join(" ") || "Unnamed request"}
+                                                    </div>
+
+                                                    <div className="truncate text-sm text-black/55">
+                                                        {item.email || "No email"}
+                                                    </div>
+
+                                                    <div className="truncate text-sm text-black/55">
+                                                        {item.product_type || "No product type"}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                                                <div className="text-xs text-black/50">
+                                                    <span className="font-medium text-black/70">Updated:</span>{" "}
+                                                    {formatDate(item.updated_at)}
+                                                </div>
+
+                                                {isAdmin ? (
                                                     <select
                                                         value={item.assignee || ""}
                                                         onChange={(e) =>
@@ -358,7 +336,7 @@ export default function CustomizeRequestsPage() {
                                                             savingAssigneeId === item.request_id ||
                                                             !item.request_id
                                                         }
-                                                        className="w-full rounded-xl border border-[#efc5d7] bg-white px-3 py-3 text-sm text-black/75 outline-none focus:border-[#d86b98]"
+                                                        className="rounded-full border border-[#efc5d7] bg-white px-3 py-2 text-xs text-black/75 outline-none focus:border-[#d86b98]"
                                                     >
                                                         <option value="">Unassigned</option>
                                                         {adminAssignees.map((admin) => (
@@ -367,12 +345,96 @@ export default function CustomizeRequestsPage() {
                                                             </option>
                                                         ))}
                                                     </select>
-                                                </div>
-                                            ) : null}
+                                                ) : null}
+
+                                                <span className="inline-flex shrink-0 rounded-full bg-[#ef5f9a] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white">
+                                                    {item.status || "submitted"}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ) : (
+                                    <div
+                                        key={item.request_id || Math.random()}
+                                        className="rounded-[24px] border border-[#efc5d7] bg-white/85 p-5 shadow-[0_14px_34px_rgba(0,0,0,0.05)]"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="truncate text-[11px] uppercase tracking-[0.24em] text-black/45">
+                                                    {item.request_id || "Pending ID"}
+                                                </div>
+                                                <div className="mt-2 text-lg font-medium leading-7 text-black/85">
+                                                    {[item.first_name, item.last_name].filter(Boolean).join(" ")}
+                                                </div>
+                                                <div className="mt-1 truncate text-sm text-black/55">
+                                                    {item.email || "No email"}
+                                                </div>
+                                            </div>
+
+                                            <span className="inline-flex shrink-0 rounded-full bg-[#ef5f9a] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white">
+                                                {item.status || "submitted"}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-4 grid gap-4">
+                                            {item.photo_url ? (
+                                                <img
+                                                    src={item.photo_url}
+                                                    alt={item.request_id || "Request image"}
+                                                    className="h-[220px] w-full rounded-[18px] border border-[#efc5d7] bg-white object-cover"
+                                                />
+                                            ) : null}
+
+                                            <div className="grid gap-3">
+                                                <CompactDetail label="Product Type" value={item.product_type} />
+                                                <CompactDetail label="Description" value={item.description} clamp />
+                                                <CompactDetail label="Measurements" value={item.measurements} clamp />
+                                                <CompactDetail label="Notes" value={item.notes} clamp />
+                                            </div>
+
+                                            <div className="grid gap-3 rounded-[18px] border border-[#efc5d7] bg-[#fff9fc] p-4 text-sm text-black/65">
+                                                <div>
+                                                    <span className="font-medium text-black/75">Created:</span>{" "}
+                                                    {formatDate(item.created_at)}
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-black/75">Updated:</span>{" "}
+                                                    {formatDate(item.updated_at)}
+                                                </div>
+
+                                                {isAdmin ? (
+                                                    <div className="pt-1">
+                                                        <div className="mb-2 text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                                            Assignee
+                                                        </div>
+                                                        <select
+                                                            value={item.assignee || ""}
+                                                            onChange={(e) =>
+                                                                handleAssigneeChange(
+                                                                    item.request_id || "",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                savingAssigneeId === item.request_id ||
+                                                                !item.request_id
+                                                            }
+                                                            className="w-full rounded-xl border border-[#efc5d7] bg-white px-3 py-3 text-sm text-black/75 outline-none focus:border-[#d86b98]"
+                                                        >
+                                                            <option value="">Unassigned</option>
+                                                            {adminAssignees.map((admin) => (
+                                                                <option key={admin.value} value={admin.value}>
+                                                                    {admin.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            )}
                         </div>
                     )}
 
