@@ -48,6 +48,12 @@ export default function CustomizeRequestsPage() {
     const [currentAdminValue, setCurrentAdminValue] = useState("");
     const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilterValue>("all");
 
+    const [requestIdSearch, setRequestIdSearch] = useState("");
+    const [productTypeFilter, setProductTypeFilter] = useState("all");
+    const [createdOnFilter, setCreatedOnFilter] = useState("");
+    const [submittedBySearch, setSubmittedBySearch] = useState("");
+    const [assignedUserSearch, setAssignedUserSearch] = useState("");
+
     useEffect(() => {
         if (typeof window === "undefined") return;
 
@@ -158,21 +164,90 @@ export default function CustomizeRequestsPage() {
         return isAdmin ? "Submitted Requests" : "Your Submitted Requests";
     }, [isAdmin]);
 
+    const productTypeOptions = useMemo(() => {
+        const unique = Array.from(
+            new Set(
+                items
+                    .map((item) => (item.product_type || "").trim())
+                    .filter(Boolean)
+            )
+        ).sort((a, b) => a.localeCompare(b));
+
+        return unique;
+    }, [items]);
+
     const filteredItems = useMemo(() => {
-        if (!isAdmin) return items;
+        let result = items;
 
-        if (assigneeFilter === "all") return items;
+        if (isAdmin) {
+            if (assigneeFilter === "me") {
+                result = result.filter((item) => (item.assignee || "") === currentAdminValue);
+            } else if (assigneeFilter === "unassigned") {
+                result = result.filter((item) => !(item.assignee || "").trim());
+            } else if (assigneeFilter !== "all") {
+                result = result.filter((item) => (item.assignee || "") === assigneeFilter);
+            }
 
-        if (assigneeFilter === "me") {
-            return items.filter((item) => (item.assignee || "") === currentAdminValue);
+            const requestIdQuery = requestIdSearch.trim().toLowerCase();
+            if (requestIdQuery) {
+                result = result.filter((item) =>
+                    (item.request_id || "").toLowerCase().includes(requestIdQuery)
+                );
+            }
+
+            if (productTypeFilter !== "all") {
+                result = result.filter(
+                    (item) =>
+                        (item.product_type || "").trim().toLowerCase() ===
+                        productTypeFilter.toLowerCase()
+                );
+            }
+
+            if (createdOnFilter) {
+                result = result.filter((item) => {
+                    if (!item.created_at) return false;
+                    const date = new Date(item.created_at);
+                    if (Number.isNaN(date.getTime())) return false;
+                    const yyyy = date.getFullYear();
+                    const mm = String(date.getMonth() + 1).padStart(2, "0");
+                    const dd = String(date.getDate()).padStart(2, "0");
+                    return `${yyyy}-${mm}-${dd}` === createdOnFilter;
+                });
+            }
+
+            const submittedNameQuery = submittedBySearch.trim().toLowerCase();
+            if (submittedNameQuery) {
+                result = result.filter((item) => {
+                    const fullName = [item.first_name, item.last_name]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim()
+                        .toLowerCase();
+
+                    return fullName.includes(submittedNameQuery);
+                });
+            }
+
+            const assignedUserQuery = assignedUserSearch.trim().toLowerCase();
+            if (assignedUserQuery) {
+                result = result.filter((item) =>
+                    (item.assignee || "").toLowerCase().includes(assignedUserQuery)
+                );
+            }
         }
 
-        if (assigneeFilter === "unassigned") {
-            return items.filter((item) => !(item.assignee || "").trim());
-        }
-
-        return items.filter((item) => (item.assignee || "") === assigneeFilter);
-    }, [items, isAdmin, assigneeFilter, currentAdminValue]);
+        return result;
+    }, [
+        items,
+        isAdmin,
+        assigneeFilter,
+        currentAdminValue,
+        requestIdSearch,
+        productTypeFilter,
+        createdOnFilter,
+        submittedBySearch,
+        assignedUserSearch,
+    ]);
 
     return (
         <main className="min-h-screen bg-[#f9eff4] text-black">
@@ -217,20 +292,90 @@ export default function CustomizeRequestsPage() {
                     </div>
 
                     {isAdmin && !loading && items.length ? (
-                        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[#efc5d7] bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
-                            <div className="text-sm text-black/60">
-                                Total requests: <span className="font-semibold text-black/85">{filteredItems.length}</span>
+                        <div className="mb-6 rounded-[24px] border border-[#efc5d7] bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+                            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                                <div className="text-sm text-black/60">
+                                    Total requests:{" "}
+                                    <span className="font-semibold text-black/85">{filteredItems.length}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode("grid")}
+                                        className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "grid"
+                                            ? "bg-[#ef5f9a] text-white"
+                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                            }`}
+                                    >
+                                        Grid View
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode("list")}
+                                        className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "list"
+                                            ? "bg-[#ef5f9a] text-white"
+                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                            }`}
+                                    >
+                                        List View
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2">
+                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                <div className="flex flex-col gap-1">
                                     <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
-                                        Assigned to
+                                        LMRA Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={requestIdSearch}
+                                        onChange={(e) => setRequestIdSearch(e.target.value)}
+                                        placeholder="Search LMRA number"
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2.5 text-sm text-black/70 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                        Product Type
+                                    </label>
+                                    <select
+                                        value={productTypeFilter}
+                                        onChange={(e) => setProductTypeFilter(e.target.value)}
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2.5 text-sm text-black/70 outline-none focus:border-[#d86b98]"
+                                    >
+                                        <option value="all">All</option>
+                                        {productTypeOptions.map((type) => (
+                                            <option key={type} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                        Created On
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={createdOnFilter}
+                                        onChange={(e) => setCreatedOnFilter(e.target.value)}
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2.5 text-sm text-black/70 outline-none focus:border-[#d86b98]"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                        Assigned To
                                     </label>
                                     <select
                                         value={assigneeFilter}
                                         onChange={(e) => setAssigneeFilter(e.target.value)}
-                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2 text-xs uppercase tracking-[0.16em] text-black/65 outline-none focus:border-[#d86b98]"
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2.5 text-sm text-black/70 outline-none focus:border-[#d86b98]"
                                     >
                                         <option value="all">All</option>
                                         <option value="me">Assigned to me</option>
@@ -243,28 +388,30 @@ export default function CustomizeRequestsPage() {
                                     </select>
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setViewMode("grid")}
-                                        className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "grid"
-                                                ? "bg-[#ef5f9a] text-white"
-                                                : "border border-[#efc5d7] bg-white text-black/65"
-                                            }`}
-                                    >
-                                        Grid View
-                                    </button>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                        Submitted User Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={submittedBySearch}
+                                        onChange={(e) => setSubmittedBySearch(e.target.value)}
+                                        placeholder="Search submitted user"
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2.5 text-sm text-black/70 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
+                                    />
+                                </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setViewMode("list")}
-                                        className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "list"
-                                                ? "bg-[#ef5f9a] text-white"
-                                                : "border border-[#efc5d7] bg-white text-black/65"
-                                            }`}
-                                    >
-                                        List View
-                                    </button>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                        Assigned User Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={assignedUserSearch}
+                                        onChange={(e) => setAssignedUserSearch(e.target.value)}
+                                        placeholder="Search assigned user"
+                                        className="rounded-full border border-[#efc5d7] bg-white px-4 py-2.5 text-sm text-black/70 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
+                                    />
                                 </div>
                             </div>
                         </div>
