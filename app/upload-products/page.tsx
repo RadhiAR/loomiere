@@ -67,6 +67,8 @@ export default function UploadProductsPage() {
         ready_to_ship_date: "",
         discount_value: "",
         discount_type: "",
+        is_lmra_request_product: "",
+        lmra_request_id: "",
     });
 
     const [loading, setLoading] = useState(false);
@@ -194,113 +196,246 @@ export default function UploadProductsPage() {
             <Navbar theme="light" />
             <BackButton href="/" label="Back" theme="light" />
 
-            <main className="min-h-screen bg-[#fdf1f6]">
-                <div className="mx-auto max-w-3xl px-6 pt-32 pb-10">
-                    <h1 className="mb-8 text-3xl font-semibold">Upload your products</h1>
+            <main className="min-h-screen bg-[linear-gradient(180deg,#fbf2f6_0%,#f9edf3_35%,#f7e6ee_100%)]">
+                <div className="mx-auto max-w-5xl px-6 pt-32 pb-14">
+                    <section className="mb-10">
+                        <p className="mb-5 text-xs uppercase tracking-[0.45em] text-neutral-500">
+                            Loomeira Upload Studio
+                        </p>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <input
-                            className="w-full rounded-lg border p-3"
-                            placeholder="Product name"
-                            value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        />
+                        <h1 className="max-w-4xl text-5xl italic leading-[1.05] text-neutral-900">
+                            Share your handmade
+                            <br />
+                            beauty with the world
+                        </h1>
 
-                        <div>
-                            <textarea
-                                className="w-full rounded-lg border p-3"
-                                placeholder="Description (max 200 characters)"
-                                maxLength={200}
-                                value={form.description}
-                                onChange={(e) =>
-                                    setForm({ ...form, description: e.target.value })
-                                }
-                            />
-                            <p className="mt-1 text-sm text-gray-500">
-                                {form.description.length}/200
+                        <p className="mt-5 max-w-3xl text-sm leading-7 text-neutral-600">
+                            Upload your beautiful Loomeira creations for the world to see,
+                            admire, and buy ✨ Add products you have lovingly made, whether
+                            they are inspired by your own creativity or designed from a
+                            customer request 💖 If a product was created through a submitted
+                            request, include the request number or product name so it stays
+                            easy to track and manage across Loomeira 🌸
+                        </p>
+                    </section>
+
+                    <div className="rounded-[2rem] border border-[#efc9d9] bg-white/70 p-6 shadow-sm">
+                        <div className="mb-8 rounded-[1.5rem] border border-pink-200 bg-[#fcf4f8] p-5">
+                            <p className="mb-2 text-xs uppercase tracking-[0.35em] text-neutral-500">
+                                Product guide
+                            </p>
+                            <h2 className="text-xl font-semibold text-neutral-900">
+                                Upload your products
+                            </h2>
+                            <p className="mt-3 text-sm leading-6 text-neutral-600">
+                                🧶 Showcase your handmade work beautifully.
+                                <br />
+                                🛍️ Upload customer-request products with the related request
+                                number or product name.
+                                <br />
+                                💕 Keep every creation organized and ready for the Loomeira
+                                world.
                             </p>
                         </div>
 
-                        <select
-                            className="w-full rounded-lg border p-3"
-                            value={form.category}
-                            onChange={(e) => setForm({ ...form, category: e.target.value })}
-                        >
-                            <option value="">Select category</option>
-                            {categories.map((category) => (
-                                <option key={category.value} value={category.value}>
-                                    {category.label}
-                                </option>
-                            ))}
-                        </select>
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Product name
+                                </label>
+                                <input
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                    placeholder="Enter product name"
+                                    value={form.name}
+                                    onChange={(e) =>
+                                        setForm({ ...form, name: e.target.value })
+                                    }
+                                />
+                            </div>
 
-                        <input
-                            className="w-full rounded-lg border p-3"
-                            type="number"
-                            step="0.01"
-                            placeholder="Price"
-                            value={form.price}
-                            onChange={(e) => setForm({ ...form, price: e.target.value })}
-                        />
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Product description
+                                </label>
+                                <textarea
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                    placeholder="Tell the world a little about this handmade product (max 200 characters)"
+                                    maxLength={200}
+                                    value={form.description}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            description: e.target.value,
+                                        })
+                                    }
+                                />
+                                <p className="mt-2 text-sm text-gray-500">
+                                    {form.description.length}/200
+                                </p>
+                            </div>
 
-                        <input
-                            className="w-full rounded-lg border p-3"
-                            type="date"
-                            value={form.ready_to_ship_date}
-                            onChange={(e) =>
-                                setForm({ ...form, ready_to_ship_date: e.target.value })
-                            }
-                        />
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Category
+                                </label>
+                                <select
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                    value={form.category}
+                                    onChange={(e) =>
+                                        setForm({ ...form, category: e.target.value })
+                                    }
+                                >
+                                    <option value="">Select category</option>
+                                    {categories.map((category) => (
+                                        <option key={category.value} value={category.value}>
+                                            {category.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <input
-                                className="w-full rounded-lg border p-3"
-                                type="number"
-                                step="0.01"
-                                placeholder="Discount value"
-                                value={form.discount_value}
-                                onChange={(e) =>
-                                    setForm({ ...form, discount_value: e.target.value })
-                                }
-                            />
+                            <div className="rounded-xl border border-[#efc9d9] bg-[#fcf4f8] p-4">
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Is this an LMRA request product?
+                                </label>
+                                <select
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-white p-3"
+                                    value={form.is_lmra_request_product}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            is_lmra_request_product: e.target.value,
+                                            lmra_request_id:
+                                                e.target.value === "yes"
+                                                    ? form.lmra_request_id
+                                                    : "",
+                                        })
+                                    }
+                                >
+                                    <option value="">Select option</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
 
-                            <select
-                                className="w-full rounded-lg border p-3"
-                                value={form.discount_type}
-                                onChange={(e) =>
-                                    setForm({ ...form, discount_type: e.target.value })
-                                }
+                                {form.is_lmra_request_product === "yes" && (
+                                    <div className="mt-4">
+                                        <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                            LMRA Request ID
+                                        </label>
+                                        <input
+                                            className="w-full rounded-[1rem] border border-[#e7d8df] bg-white p-3"
+                                            placeholder="Enter LMRA Request ID"
+                                            value={form.lmra_request_id}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    lmra_request_id: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Price
+                                </label>
+                                <input
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="Price"
+                                    value={form.price}
+                                    onChange={(e) =>
+                                        setForm({ ...form, price: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Ready to ship date
+                                </label>
+                                <input
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                    type="date"
+                                    value={form.ready_to_ship_date}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            ready_to_ship_date: e.target.value,
+                                        })
+                                    }
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                        Discount value
+                                    </label>
+                                    <input
+                                        className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="Discount value"
+                                        value={form.discount_value}
+                                        onChange={(e) =>
+                                            setForm({
+                                                ...form,
+                                                discount_value: e.target.value,
+                                            })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                        Discount type
+                                    </label>
+                                    <select
+                                        className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                        value={form.discount_type}
+                                        onChange={(e) =>
+                                            setForm({
+                                                ...form,
+                                                discount_type: e.target.value,
+                                            })
+                                        }
+                                    >
+                                        <option value="">Select discount type</option>
+                                        {discountTypes.map((type) => (
+                                            <option key={type} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                                    Upload photos and videos
+                                </label>
+                                <input
+                                    className="w-full rounded-[1rem] border border-[#e7d8df] bg-[#fcf7fa] p-3"
+                                    type="file"
+                                    multiple
+                                    accept="image/*,video/*"
+                                    onChange={(e) => setFiles(e.target.files)}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="rounded-full bg-pink-500 px-6 py-3 text-white hover:bg-pink-600 disabled:opacity-50"
                             >
-                                <option value="">Select discount type</option>
-                                {discountTypes.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-2 block font-medium">
-                                Upload photos and videos
-                            </label>
-                            <input
-                                className="w-full rounded-lg border p-3"
-                                type="file"
-                                multiple
-                                accept="image/*,video/*"
-                                onChange={(e) => setFiles(e.target.files)}
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-xl bg-pink-600 px-6 py-3 text-white hover:bg-pink-700 disabled:opacity-50"
-                        >
-                            {loading ? "Saving..." : "Save"}
-                        </button>
-                    </form>
+                                {loading ? "Saving..." : "Upload product"}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </main>
         </>
