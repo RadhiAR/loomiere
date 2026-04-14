@@ -755,6 +755,8 @@ export default function LoomeiraAIPage() {
                     </div>
                 </div>
             </section>
+
+
         </main>
     );
 }

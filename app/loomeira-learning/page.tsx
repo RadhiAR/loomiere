@@ -3,6 +3,8 @@
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 
 type LearningEntry = {
     id: string;
@@ -24,6 +26,53 @@ type PlanWeek = {
     focus: string;
     goal: string;
 };
+
+const footerColumns = [
+    {
+        title: "Help",
+        links: [
+            { label: "Contact Us", href: "/contact" },
+            { label: "FAQs", href: "#" },
+            { label: "Product Care", href: "#" },
+            { label: "Stores", href: "#" },
+        ],
+    },
+    {
+        title: "Services",
+        links: [
+            { label: "Custom Orders", href: "/customize" },
+            { label: "Subscriptions", href: "/subscriptions" },
+            { label: "Returns", href: "#" },
+            { label: "My Orders", href: "/orders" },
+        ],
+    },
+    {
+        title: "About Loomeira",
+        links: [
+            { label: "Our Story", href: "/about" },
+            { label: "Craftsmanship", href: "#" },
+            { label: "Collections", href: "/shop" },
+            { label: "Loomeira Learning", href: "/loomeira-learning" },
+            { label: "Loomeira AI", href: "/loomiere-ai" },
+        ],
+    },
+    {
+        title: "Email and Updates",
+        links: [
+            { label: "Subscribe", href: "/subscriptions" },
+            { label: "New Arrivals", href: "/shop" },
+            { label: "Exclusive Drops", href: "/shop" },
+            { label: "Follow Us", href: "#" },
+        ],
+    },
+];
+
+const footerBottomLinks = [
+    { label: "Sitemap", href: "#" },
+    { label: "Legal Notices", href: "#" },
+    { label: "Privacy Policy", href: "#" },
+    { label: "Accessibility", href: "#" },
+];
 
 function formatDateKey(date: Date) {
     const year = date.getFullYear();
@@ -368,8 +417,7 @@ export default function LoomeiraLearningPage() {
             const assistantMessage: ChatMessage = {
                 id: `assistant-error-${Date.now() + 1}`,
                 role: "assistant",
-                text: `Chat failed: ${error instanceof Error ? error.message : "Unknown error"
-                    }`,
+                text: `Chat failed: ${error instanceof Error ? error.message : "Unknown error"}`,
             };
 
             setChatMessages((prev) => [...prev, assistantMessage]);
@@ -472,8 +520,8 @@ export default function LoomeiraLearningPage() {
                                         type="button"
                                         onClick={() => setSelectedDate(dateKey)}
                                         className={`min-h-[88px] rounded-[20px] border p-3 text-left transition ${isSelected
-                                            ? "border-[#ea4c97] bg-[#ffe9f2]"
-                                            : "border-black/8 bg-[#fffbfd] hover:bg-[#fff1f6]"
+                                                ? "border-[#ea4c97] bg-[#ffe9f2]"
+                                                : "border-black/8 bg-[#fffbfd] hover:bg-[#fff1f6]"
                                             } ${isCurrentMonth ? "text-black" : "text-black/30"}`}
                                     >
                                         <div className="flex items-center justify-between">
@@ -878,8 +926,8 @@ export default function LoomeiraLearningPage() {
                                 <div
                                     key={message.id}
                                     className={`max-w-[88%] rounded-[22px] px-4 py-3 text-sm leading-7 ${message.role === "assistant"
-                                        ? "bg-white text-black/75"
-                                        : "ml-auto bg-[#ea4c97] text-white"
+                                            ? "bg-white text-black/75"
+                                            : "ml-auto bg-[#ea4c97] text-white"
                                         }`}
                                 >
                                     {message.text}
@@ -903,6 +951,86 @@ export default function LoomeiraLearningPage() {
                                 {isSendingChat ? "Sending..." : "Send"}
                             </button>
                         </form>
+                    </div>
+                </div>
+            </section>
+
+            <section className="pb-12 pt-2">
+                <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+                    <div className="overflow-hidden rounded-[30px] border border-[#eadfe3] bg-[#fdf6f8] shadow-[0_12px_35px_rgba(0,0,0,0.04)]">
+                        <div className="border-b border-black/10 px-6 py-10 md:px-10 lg:px-12">
+                            <div className="mb-10 max-w-3xl">
+                                <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-black/45">
+                                    Soft Luxury, Handmade
+                                </p>
+                                <h2 className="text-2xl font-light leading-snug text-black md:text-3xl">
+                                    Crafted collections for fashion, home, pets, and everyday beauty.
+                                </h2>
+                            </div>
+
+                            <div className="grid gap-10 md:grid-cols-2 xl:grid-cols-4">
+                                {footerColumns.map((column) => (
+                                    <div key={column.title}>
+                                        <p className="mb-5 text-[10px] uppercase tracking-[0.26em] text-black/55">
+                                            {column.title}
+                                        </p>
+
+                                        <div className="space-y-3">
+                                            {column.links.map((link) => (
+                                                <Link
+                                                    key={link.label}
+                                                    href={link.href}
+                                                    className="block text-[15px] font-light tracking-[0.01em] text-black/80 transition hover:text-black"
+                                                >
+                                                    {link.label}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-6 md:px-10 lg:px-12">
+                            <div className="flex flex-col items-start justify-between gap-5 lg:flex-row lg:items-center">
+                                <div className="text-[14px] text-black/70">
+                                    Ship to: United States of America
+                                </div>
+
+                                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                    {footerBottomLinks.map((link) => (
+                                        <Link
+                                            key={link.label}
+                                            href={link.href}
+                                            className="text-[14px] text-black/75 transition hover:text-black"
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mt-6 border-t border-black/10 pt-5 text-center">
+                                <div className="mx-auto flex flex-col items-center justify-center">
+                                    <div className="relative h-[90px] w-[90px] md:h-[120px] md:w-[120px]">
+                                        <Image
+                                            src="/loomeira-logo.png"
+                                            alt="Loomeira logo"
+                                            fill
+                                            className="object-contain"
+                                            style={{
+                                                filter:
+                                                    "brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%)",
+                                            }}
+                                        />
+                                    </div>
+
+                                    <p className="mt-2 text-xs text-black/55">
+                                        © {new Date().getFullYear()} Loomèira. All rights reserved.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
