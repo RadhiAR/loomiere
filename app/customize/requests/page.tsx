@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
@@ -37,7 +37,9 @@ const ADMIN_USERS_KEY = "loomiere_admin_users_v1";
 export default function CustomizeRequestsPage() {
     const searchParams = useSearchParams();
     const submittedId = searchParams.get("submitted") || "";
-    const isAdmin = isAdminSessionActive();
+
+    const [isMounted, setIsMounted] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const [items, setItems] = useState<RequestItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -55,11 +57,22 @@ export default function CustomizeRequestsPage() {
     const [assignedUserSearch, setAssignedUserSearch] = useState("");
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        setIsMounted(true);
+
+        try {
+            setIsAdmin(isAdminSessionActive());
+        } catch {
+            setIsAdmin(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isMounted || typeof window === "undefined") return;
 
         try {
             const raw = window.localStorage.getItem(ADMIN_USERS_KEY);
             const parsed = raw ? JSON.parse(raw) : [];
+
             const options = Array.isArray(parsed)
                 ? parsed.map((item: any) => ({
                     value: item?.username || item?.email || "",
@@ -84,9 +97,14 @@ export default function CustomizeRequestsPage() {
             setAdminAssignees([]);
             setCurrentAdminValue("");
         }
-    }, []);
+    }, [isMounted]);
 
-    async function loadRequests() {
+    const loadRequests = useCallback(async () => {
+        if (!isMounted) return;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
         try {
             setLoading(true);
             setPageMessage("");
@@ -102,44 +120,110 @@ export default function CustomizeRequestsPage() {
                 return;
             }
 
-            const res = await fetch(query);
-            const data = await res.json().catch(() => null);
+            const res = await fetch(query, {
+                method: "GET",
+                cache: "no-store",
+                signal: controller.signal,
+                headers: {
+                    Accept: "application/json",
+                },
+            });
+
+            const contentType = res.headers.get("content-type") || "";
+            const isJson = contentType.includes("application/json");
+            const data = isJson ? await res.json().catch(() => null) : null;
 
             if (!res.ok) {
-                throw new Error(data?.message || "Failed to load requests.");
+                const backendMessage =
+                    data?.message ||
+                    data?.error ||
+                    (res.status >= 500
+                        ? "Unable to load requests right now. The server or Supabase connection may be failing."
+                        : "Failed to load requests.");
+
+                throw new Error(backendMessage);
             }
 
-            setItems(data?.items || []);
+            const nextItems = Array.isArray(data?.items) ? data.items : [];
+            setItems(nextItems);
+
+            if (!nextItems.length) {
+                setPageMessage(
+                    isAdmin
+                        ? "No requests found yet."
+                        : "No saved requests found in this browser yet."
+                );
+            }
         } catch (error: any) {
-            setPageMessage(error?.message || "Failed to load requests.");
+            console.error("Failed to load custom requests:", error);
+
+            if (error?.name === "AbortError") {
+                setPageMessage(
+                    "Request timed out while loading requests. Please check your Supabase connection and try again."
+                );
+                return;
+            }
+
+            const rawMessage =
+                typeof error?.message === "string" ? error.message.trim() : "";
+
+            if (
+                rawMessage.toLowerCase().includes("fetch failed") ||
+                rawMessage.toLowerCase().includes("network") ||
+                rawMessage.toLowerCase().includes("failed to fetch")
+            ) {
+                setPageMessage(
+                    "Unable to reach the requests service right now. This is usually caused by a Supabase connection or server-side API issue."
+                );
+                return;
+            }
+
+            setPageMessage(rawMessage || "Failed to load requests.");
         } finally {
+            clearTimeout(timeout);
             setLoading(false);
         }
-    }
+    }, [isMounted, isAdmin]);
 
     useEffect(() => {
         loadRequests();
-    }, [isAdmin]);
+    }, [loadRequests]);
 
     async function handleAssigneeChange(requestId: string, assignee: string) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
         try {
             setSavingAssigneeId(requestId);
+            setPageMessage("");
 
             const res = await fetch("/api/custom-requests", {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
+                    Accept: "application/json",
                 },
+                cache: "no-store",
+                signal: controller.signal,
                 body: JSON.stringify({
                     requestId,
                     assignee,
                 }),
             });
 
-            const data = await res.json().catch(() => null);
+            const contentType = res.headers.get("content-type") || "";
+            const isJson = contentType.includes("application/json");
+            const data = isJson ? await res.json().catch(() => null) : null;
 
             if (!res.ok) {
-                throw new Error(data?.message || "Failed to update assignee.");
+                const backendMessage =
+                    data?.message ||
+                    data?.error ||
+                    (res.status >= 500
+                        ? "Unable to update assignee right now. The server or Supabase connection may be failing."
+                        : "Failed to update assignee.");
+
+                throw new Error(backendMessage);
             }
 
             setItems((prev) =>
@@ -154,15 +238,50 @@ export default function CustomizeRequestsPage() {
                 )
             );
         } catch (error: any) {
-            setPageMessage(error?.message || "Failed to update assignee.");
+            console.error("Failed to update assignee:", error);
+
+            if (error?.name === "AbortError") {
+                setPageMessage(
+                    "Request timed out while updating assignee. Please try again."
+                );
+                return;
+            }
+
+            const rawMessage =
+                typeof error?.message === "string" ? error.message.trim() : "";
+
+            if (
+                rawMessage.toLowerCase().includes("fetch failed") ||
+                rawMessage.toLowerCase().includes("network") ||
+                rawMessage.toLowerCase().includes("failed to fetch")
+            ) {
+                setPageMessage(
+                    "Unable to update the assignee right now. This is usually caused by a Supabase connection or server-side API issue."
+                );
+                return;
+            }
+
+            setPageMessage(rawMessage || "Failed to update assignee.");
         } finally {
+            clearTimeout(timeout);
             setSavingAssigneeId("");
         }
     }
 
     const headingText = useMemo(() => {
+        if (!isMounted) return "Submitted Requests";
         return isAdmin ? "Submitted Requests" : "Your Submitted Requests";
-    }, [isAdmin]);
+    }, [isMounted, isAdmin]);
+
+    const descriptionText = useMemo(() => {
+        if (!isMounted) {
+            return "Loading your request view...";
+        }
+
+        return isAdmin
+            ? "This page contains all the requests submitted by Loomeira shoppers for their desired products. Every submitted request appears here, and a user can assign a ticket to their own user name, begin working on it, and connect with the shopper through Loomeira MILAN to continue the conversation."
+            : "Track every request submitted from this browser.";
+    }, [isMounted, isAdmin]);
 
     const productTypeOptions = useMemo(() => {
         const unique = Array.from(
@@ -272,9 +391,7 @@ export default function CustomizeRequestsPage() {
                         </h1>
 
                         <p className="mx-auto mt-4 max-w-4xl text-base leading-8 text-black/65">
-                            {isAdmin
-                                ? "This page contains all the requests submitted by Loomeira shoppers for their desired products. Every submitted request appears here, and a user can assign a ticket to their own user name, begin working on it, and connect with the shopper through Loomeira MILAN to continue the conversation."
-                                : "Track every request submitted from this browser."}
+                            {descriptionText}
                         </p>
 
                         {submittedId ? (
@@ -291,12 +408,14 @@ export default function CustomizeRequestsPage() {
                         ) : null}
                     </div>
 
-                    {isAdmin && !loading && items.length ? (
+                    {isMounted && isAdmin && !loading && items.length ? (
                         <div className="mb-6 rounded-[24px] border border-[#efc5d7] bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
                                 <div className="text-sm text-black/60">
                                     Total requests:{" "}
-                                    <span className="font-semibold text-black/85">{filteredItems.length}</span>
+                                    <span className="font-semibold text-black/85">
+                                        {filteredItems.length}
+                                    </span>
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -304,8 +423,8 @@ export default function CustomizeRequestsPage() {
                                         type="button"
                                         onClick={() => setViewMode("grid")}
                                         className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "grid"
-                                            ? "bg-[#ef5f9a] text-white"
-                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                                ? "bg-[#ef5f9a] text-white"
+                                                : "border border-[#efc5d7] bg-white text-black/65"
                                             }`}
                                     >
                                         Grid View
@@ -315,8 +434,8 @@ export default function CustomizeRequestsPage() {
                                         type="button"
                                         onClick={() => setViewMode("list")}
                                         className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] transition ${viewMode === "list"
-                                            ? "bg-[#ef5f9a] text-white"
-                                            : "border border-[#efc5d7] bg-white text-black/65"
+                                                ? "bg-[#ef5f9a] text-white"
+                                                : "border border-[#efc5d7] bg-white text-black/65"
                                             }`}
                                     >
                                         List View
@@ -417,7 +536,7 @@ export default function CustomizeRequestsPage() {
                         </div>
                     ) : null}
 
-                    {loading ? (
+                    {!isMounted || loading ? (
                         <div className="rounded-[28px] border border-[#efc5d7] bg-white/75 p-10 text-center text-black/55 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
                             Loading requests...
                         </div>
@@ -437,10 +556,10 @@ export default function CustomizeRequestsPage() {
                                     : "grid gap-3"
                             }
                         >
-                            {filteredItems.map((item) =>
+                            {filteredItems.map((item, index) =>
                                 viewMode === "list" ? (
                                     <div
-                                        key={item.request_id || Math.random()}
+                                        key={item.request_id || `request-list-${index}`}
                                         className="cursor-pointer rounded-[20px] border border-[#efc5d7] bg-white/90 px-4 py-4 shadow-[0_10px_28px_rgba(0,0,0,0.04)] transition hover:-translate-y-[1px] hover:bg-[#fff9fc] hover:shadow-[0_14px_34px_rgba(0,0,0,0.06)]"
                                     >
                                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -451,7 +570,9 @@ export default function CustomizeRequestsPage() {
                                                     </div>
 
                                                     <div className="truncate text-base font-medium leading-6 text-black/85">
-                                                        {[item.first_name, item.last_name].filter(Boolean).join(" ") || "Unnamed request"}
+                                                        {[item.first_name, item.last_name]
+                                                            .filter(Boolean)
+                                                            .join(" ") || "Unnamed request"}
                                                     </div>
 
                                                     <div className="truncate text-sm text-black/55">
@@ -466,7 +587,9 @@ export default function CustomizeRequestsPage() {
 
                                             <div className="flex flex-wrap items-center gap-3 lg:justify-end">
                                                 <div className="text-xs text-black/50">
-                                                    <span className="font-medium text-black/70">Updated:</span>{" "}
+                                                    <span className="font-medium text-black/70">
+                                                        Updated:
+                                                    </span>{" "}
                                                     {formatDate(item.updated_at)}
                                                 </div>
 
@@ -502,7 +625,7 @@ export default function CustomizeRequestsPage() {
                                     </div>
                                 ) : (
                                     <div
-                                        key={item.request_id || Math.random()}
+                                        key={item.request_id || `request-grid-${index}`}
                                         className="rounded-[24px] border border-[#efc5d7] bg-white/85 p-5 shadow-[0_14px_34px_rgba(0,0,0,0.05)]"
                                     >
                                         <div className="flex items-start justify-between gap-3">
@@ -511,7 +634,9 @@ export default function CustomizeRequestsPage() {
                                                     {item.request_id || "Pending ID"}
                                                 </div>
                                                 <div className="mt-2 text-lg font-medium leading-7 text-black/85">
-                                                    {[item.first_name, item.last_name].filter(Boolean).join(" ")}
+                                                    {[item.first_name, item.last_name]
+                                                        .filter(Boolean)
+                                                        .join(" ")}
                                                 </div>
                                                 <div className="mt-1 truncate text-sm text-black/55">
                                                     {item.email || "No email"}
