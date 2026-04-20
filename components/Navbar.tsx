@@ -729,26 +729,11 @@ export default function Navbar({ theme = "dark" }: Props) {
                             <button
                                 type="button"
                                 className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => goPublic("/returns")}
-                            >
-                                Return Policy
-                            </button>
-
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
                                 onClick={() => goPublic("/subscriptions")}
                             >
                                 Subscriptions
                             </button>
 
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => requireProfileAccess("/account")}
-                            >
-                                My Account
-                            </button>
 
                             {adminActive ? (
                                 <button
