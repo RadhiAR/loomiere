@@ -36,7 +36,7 @@ type StoredAdminUser = {
 
 type MilanRoomMeta = {
     roomId: string;
-    type: "lounge" | "direct-admin" | "admin-group" | "group";
+    type: "direct-admin" | "admin-group" | "group";
     memberIds: string[];
     memberUsernames: string[];
     createdBy: string;
@@ -98,15 +98,12 @@ const GIF_LIBRARY = [
     "https://media.giphy.com/media/MDJ9IbxxvDUQM/giphy.gif",
 ];
 
-function HeartBadgeA() {
+function MilanMark() {
     return (
-        <div className="relative flex h-20 w-20 items-center justify-center">
-            <div className="absolute h-12 w-12 rotate-45 rounded-[14px] bg-[#ff4f8b]" />
-            <div className="absolute left-[12px] top-[12px] h-10 w-10 rounded-full bg-[#ff4f8b]" />
-            <div className="absolute right-[12px] top-[12px] h-10 w-10 rounded-full bg-[#ff4f8b]" />
-            <div className="relative z-10 -mt-1 text-[30px] font-semibold italic text-white">
-                A
-            </div>
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#ff4f8b_0%,#d81b60_100%)] shadow-[0_14px_30px_rgba(232,74,138,0.28)]">
+            <span className="text-2xl font-semibold italic text-white">A</span>
+            <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-white/80" />
+            <div className="absolute -bottom-1 left-2 h-2.5 w-2.5 rounded-full bg-[#ffbfd4]" />
         </div>
     );
 }
@@ -130,6 +127,22 @@ function formatDate(value: string | null | undefined) {
     } catch {
         return "N/A";
     }
+}
+
+function formatRoomTitle(room: MilanRoom, meta?: MilanRoomMeta | null, currentUsername?: string) {
+    if (!meta) return room.name;
+
+    if (meta.type === "direct-admin") {
+        const others = meta.memberUsernames.filter(
+            (member) => member.toLowerCase() !== (currentUsername || "").toLowerCase()
+        );
+
+        if (others.length > 0) {
+            return `@${others[0]}`;
+        }
+    }
+
+    return room.name;
 }
 
 function readAdminUsers(): StoredAdminUser[] {
@@ -258,6 +271,9 @@ export default function LoomeiraMilanPage() {
     const [lmraResult, setLmraResult] = useState<LmraRequestItem | null>(null);
     const [lmraMessage, setLmraMessage] = useState("");
 
+    const [userSearch, setUserSearch] = useState("");
+    const [showCreateGroupPanel, setShowCreateGroupPanel] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const currentAdmin = useMemo(() => {
@@ -309,6 +325,50 @@ export default function LoomeiraMilanPage() {
             .sort((a, b) => a.username.localeCompare(b.username));
     }, [adminUsers]);
 
+    const searchableAdmins = useMemo(() => {
+        const query = userSearch.trim().toLowerCase();
+
+        return adminDirectory.filter((admin) => {
+            if (admin.id === userId) return false;
+            if (!query) return true;
+
+            return (
+                admin.username.toLowerCase().includes(query) ||
+                `${admin.firstName} ${admin.lastName}`.toLowerCase().includes(query) ||
+                admin.email.toLowerCase().includes(query)
+            );
+        });
+    }, [adminDirectory, userId, userSearch]);
+
+    const visibleRooms = useMemo(() => {
+        return rooms.filter((room) => {
+            const meta = roomMetaMap[room.id];
+            if (!meta) return false;
+            return meta.memberIds.includes(userId);
+        });
+    }, [rooms, roomMetaMap, userId]);
+
+    const sortedVisibleRooms = useMemo(() => {
+        return [...visibleRooms].sort((a, b) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+    }, [visibleRooms]);
+
+    const directRooms = useMemo(() => {
+        return sortedVisibleRooms.filter((room) => roomMetaMap[room.id]?.type === "direct-admin");
+    }, [sortedVisibleRooms, roomMetaMap]);
+
+    const groupRooms = useMemo(() => {
+        return sortedVisibleRooms.filter((room) => {
+            const type = roomMetaMap[room.id]?.type;
+            return type === "admin-group" || type === "group";
+        });
+    }, [sortedVisibleRooms, roomMetaMap]);
+
+    const activeRoomTitle = useMemo(() => {
+        return activeRoom ? formatRoomTitle(activeRoom, activeRoomMeta, username) : "Select a chat";
+    }, [activeRoom, activeRoomMeta, username]);
+
     function syncAdminUsers() {
         setAdminUsers(readAdminUsers());
     }
@@ -324,29 +384,6 @@ export default function LoomeiraMilanPage() {
         ]);
         writeRoomMeta(next);
         setRoomMeta(next);
-    }
-
-    function ensureRoomMeta(room: MilanRoom, override?: Partial<MilanRoomMeta>) {
-        const existing = roomMetaMap[room.id];
-
-        if (existing) return existing;
-
-        const nextItem: MilanRoomMeta = {
-            roomId: room.id,
-            type:
-                room.name === "Milan Lounge"
-                    ? "lounge"
-                    : room.is_group
-                        ? "group"
-                        : "direct-admin",
-            memberIds: [],
-            memberUsernames: [],
-            createdBy: room.created_by || "",
-            ...override,
-        };
-
-        saveOrUpdateRoomMeta(nextItem);
-        return nextItem;
     }
 
     useEffect(() => {
@@ -387,12 +424,12 @@ export default function LoomeiraMilanPage() {
             const { data, error } = await supabase
                 .from("loomeira_milan_rooms")
                 .select("id, name, is_group, created_by, created_at")
-                .order("created_at", { ascending: true });
+                .order("created_at", { ascending: false });
 
             if (!mounted) return;
 
             if (error) {
-                setError("Could not load MILAN rooms yet.");
+                setError("Could not load chats yet.");
                 setLoadingRooms(false);
                 return;
             }
@@ -400,18 +437,11 @@ export default function LoomeiraMilanPage() {
             const nextRooms = Array.isArray(data) ? data : [];
             setRooms(nextRooms);
 
-            nextRooms.forEach((room) => {
-                if (room.name === "Milan Lounge") {
-                    ensureRoomMeta(room, {
-                        type: "lounge",
-                        memberIds: [],
-                        memberUsernames: [],
-                    });
+            if (!activeRoomId && nextRooms.length > 0) {
+                const firstVisible = nextRooms.find((room) => roomMetaMap[room.id]?.memberIds.includes(userId));
+                if (firstVisible) {
+                    setActiveRoomId(firstVisible.id);
                 }
-            });
-
-            if (nextRooms.length > 0) {
-                setActiveRoomId((prev) => prev || nextRooms[0].id);
             }
 
             setLoadingRooms(false);
@@ -432,23 +462,18 @@ export default function LoomeiraMilanPage() {
                     const { data } = await supabase
                         .from("loomeira_milan_rooms")
                         .select("id, name, is_group, created_by, created_at")
-                        .order("created_at", { ascending: true });
+                        .order("created_at", { ascending: false });
 
                     const nextRooms = Array.isArray(data) ? data : [];
                     setRooms(nextRooms);
 
-                    nextRooms.forEach((room) => {
-                        if (room.name === "Milan Lounge") {
-                            ensureRoomMeta(room, {
-                                type: "lounge",
-                                memberIds: [],
-                                memberUsernames: [],
-                            });
+                    if (!activeRoomId) {
+                        const firstVisible = nextRooms.find(
+                            (room) => roomMetaMap[room.id]?.memberIds.includes(userId)
+                        );
+                        if (firstVisible) {
+                            setActiveRoomId(firstVisible.id);
                         }
-                    });
-
-                    if (!activeRoomId && nextRooms.length > 0) {
-                        setActiveRoomId(nextRooms[0].id);
                     }
                 }
             )
@@ -458,7 +483,7 @@ export default function LoomeiraMilanPage() {
             mounted = false;
             supabase.removeChannel(roomsChannel);
         };
-    }, [activeRoomId, roomMetaMap]);
+    }, [activeRoomId, roomMetaMap, userId]);
 
     useEffect(() => {
         if (!activeRoomId) return;
@@ -478,7 +503,7 @@ export default function LoomeiraMilanPage() {
             if (!mounted) return;
 
             if (error) {
-                setError("Could not load messages for this room.");
+                setError("Could not load messages for this chat.");
                 setLoadingMessages(false);
                 return;
             }
@@ -521,58 +546,72 @@ export default function LoomeiraMilanPage() {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    async function createDefaultRoomIfNeeded() {
-        const { data } = await supabase
-            .from("loomeira_milan_rooms")
-            .select("id, name, is_group, created_by, created_at")
-            .order("created_at", { ascending: true });
+    async function handleOpenDirectChat(targetAdmin: StoredAdminUser) {
+        if (!loggedIn) {
+            setError("Please log in to start a direct chat.");
+            return;
+        }
 
-        const existingRooms = Array.isArray(data) ? data : [];
+        setError("");
 
-        if (existingRooms.length > 0) {
-            const lounge = existingRooms.find((room) => room.name === "Milan Lounge");
-            if (lounge) {
-                ensureRoomMeta(lounge, {
-                    type: "lounge",
-                    memberIds: [],
-                    memberUsernames: [],
-                });
+        const existingMeta = roomMeta.find((item) => {
+            if (item.type !== "direct-admin") return false;
+            const ids = [...item.memberIds].sort();
+            const compareIds = [...new Set([userId, targetAdmin.id])].sort();
+
+            return JSON.stringify(ids) === JSON.stringify(compareIds);
+        });
+
+        if (existingMeta?.roomId) {
+            setActiveRoomId(existingMeta.roomId);
+            return;
+        }
+
+        try {
+            const roomName = `${username} · ${targetAdmin.username}`;
+
+            const { data, error } = await supabase
+                .from("loomeira_milan_rooms")
+                .insert([
+                    {
+                        name: roomName,
+                        is_group: false,
+                        created_by: userId,
+                    },
+                ])
+                .select()
+                .single();
+
+            if (error) {
+                throw error;
             }
-            return existingRooms;
+
+            if (data?.id) {
+                saveOrUpdateRoomMeta({
+                    roomId: data.id,
+                    type: "direct-admin",
+                    memberIds: [userId, targetAdmin.id],
+                    memberUsernames: [username, targetAdmin.username],
+                    createdBy: userId,
+                });
+
+                setRooms((prev) => {
+                    const exists = prev.some((room) => room.id === data.id);
+                    if (exists) return prev;
+                    return [data, ...prev];
+                });
+
+                setActiveRoomId(data.id);
+                setUserSearch("");
+            }
+        } catch (openError: any) {
+            setError(openError?.message || "Could not open direct chat right now.");
         }
-
-        const { data: inserted } = await supabase
-            .from("loomeira_milan_rooms")
-            .insert([
-                {
-                    name: "Milan Lounge",
-                    is_group: true,
-                    created_by: userId,
-                },
-            ])
-            .select();
-
-        const insertedRooms = Array.isArray(inserted) ? inserted : [];
-        const lounge = insertedRooms[0];
-
-        if (lounge) {
-            ensureRoomMeta(lounge, {
-                type: "lounge",
-                memberIds: [],
-                memberUsernames: [],
-            });
-        }
-
-        return insertedRooms;
     }
-
-    useEffect(() => {
-        createDefaultRoomIfNeeded();
-    }, []);
 
     async function handleCreateGroup() {
         if (!adminLoggedIn) {
-            setError("Only admin users can create separate admin groups.");
+            setError("Only admin users can create groups.");
             return;
         }
 
@@ -581,8 +620,8 @@ export default function LoomeiraMilanPage() {
             return;
         }
 
-        if (selectedAdminIds.length === 0) {
-            setError("Please select at least one admin user for this group.");
+        if (selectedAdminIds.length < 2) {
+            setError("Please select at least two users for a group.");
             return;
         }
 
@@ -594,12 +633,9 @@ export default function LoomeiraMilanPage() {
                 selectedAdminIds.includes(admin.id)
             );
 
-            const memberIds = Array.from(
-                new Set([userId, ...selectedAdmins.map((admin) => admin.id)])
-            );
-
+            const memberIds = Array.from(new Set(selectedAdmins.map((admin) => admin.id)));
             const memberUsernames = Array.from(
-                new Set([username, ...selectedAdmins.map((admin) => admin.username).filter(Boolean)])
+                new Set(selectedAdmins.map((admin) => admin.username).filter(Boolean))
             );
 
             const { data, error } = await supabase
@@ -630,7 +666,7 @@ export default function LoomeiraMilanPage() {
                 setRooms((prev) => {
                     const exists = prev.some((room) => room.id === data.id);
                     if (exists) return prev;
-                    return [...prev, data];
+                    return [data, ...prev];
                 });
 
                 setActiveRoomId(data.id);
@@ -638,6 +674,7 @@ export default function LoomeiraMilanPage() {
 
             setNewGroupName("");
             setSelectedAdminIds(adminLoggedIn ? [userId] : []);
+            setShowCreateGroupPanel(false);
         } catch (createError: any) {
             setError(createError?.message || "Could not create group right now.");
         } finally {
@@ -652,7 +689,7 @@ export default function LoomeiraMilanPage() {
         }
 
         if (!activeRoomId) {
-            setError("Please select a room first.");
+            setError("Please select a chat first.");
             return;
         }
 
@@ -809,206 +846,322 @@ export default function LoomeiraMilanPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff0f6_0%,#ffe0ea_32%,#ffd0df_100%)] text-black">
+        <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6fa_0%,#ffe8f0_34%,#ffdbe8_100%)] text-black">
             <Navbar theme="light" />
 
             <section className="px-6 pb-10 pt-28 md:px-10 lg:px-16">
                 <div className="mx-auto max-w-7xl">
-                    <div className="mb-8 flex flex-col gap-5 rounded-[34px] border border-[#f3aac6] bg-white/70 p-6 shadow-[0_18px_60px_rgba(236,72,153,0.12)] backdrop-blur">
-                        <div className="flex items-start justify-between gap-5">
-                            <div className="flex items-center gap-4">
-                                <HeartBadgeA />
-                                <div>
-                                    <div className="text-[11px] uppercase tracking-[0.34em] text-[#d14a85]">
-                                        Subscribers Chat Club
+                    <div className="mb-6 overflow-hidden rounded-[34px] border border-[#f1b8ce] bg-white/80 shadow-[0_22px_70px_rgba(236,72,153,0.14)] backdrop-blur">
+                        <div className="bg-[linear-gradient(135deg,#fff7fb_0%,#ffe8f1_100%)] px-6 py-6 md:px-8 md:py-7">
+                            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                                <div className="flex items-start gap-4">
+                                    <MilanMark />
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.34em] text-[#cc4d84]">
+                                            Subscribers chat club
+                                        </div>
+                                        <h1 className="mt-2 text-3xl font-light tracking-[0.02em] text-[#7c163d] md:text-5xl">
+                                            Loomeira — MILAN
+                                        </h1>
+                                        <p className="mt-3 max-w-3xl text-sm leading-7 text-black/60 md:text-base">
+                                            A cleaner workspace for Loomeira subscribers and admins.
+                                            Search usernames, open direct chats instantly, and create
+                                            groups only when you actually need them.
+                                        </p>
                                     </div>
-                                    <h1 className="mt-2 text-3xl font-light tracking-[0.03em] text-[#7c163d] md:text-5xl">
-                                        Loomeira - MILAN
-                                    </h1>
-                                    <p className="mt-3 max-w-2xl text-sm leading-7 text-black/65 md:text-base">
-                                        Chat with Loomiera admin usernames directly and create separate
-                                        admin-only groups in a clean text-first space.
-                                    </p>
+                                </div>
+
+                                <div className="hidden md:block">
+                                    <BackButton />
                                 </div>
                             </div>
 
-                            <div className="hidden md:block">
-                                <BackButton />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="rounded-full border border-[#f2a8c6] bg-[#fff4f8] px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#a61f57]">
-                                Logged in as: {loggedIn ? username : "Guest"}
+                            <div className="mt-5 flex flex-wrap items-center gap-3">
+                                <div className="rounded-full border border-[#efbfd1] bg-white px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#a61f57] shadow-sm">
+                                    Logged in as: {loggedIn ? username : "Guest"}
+                                </div>
+                                <div className="rounded-full border border-[#efbfd1] bg-[#fff4f8] px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#b62b68] shadow-sm">
+                                    {directRooms.length} chats • {groupRooms.length} groups
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {error ? (
-                        <div className="mb-6 rounded-2xl border border-[#f0a3bf] bg-[#fff3f7] px-5 py-4 text-sm text-[#b11e5b]">
+                        <div className="mb-5 rounded-2xl border border-[#f0a3bf] bg-[#fff3f7] px-5 py-4 text-sm text-[#b11e5b]">
                             {error}
                         </div>
                     ) : null}
 
-                    <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-                        <aside className="rounded-[30px] border border-[#f1b1cb] bg-white/75 p-5 shadow-[0_12px_40px_rgba(236,72,153,0.12)]">
-                            <div className="mb-4">
+                    <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+                        <aside className="rounded-[32px] border border-[#f1b6cc] bg-[#fff9fc]/90 p-4 shadow-[0_16px_50px_rgba(236,72,153,0.12)]">
+                            <div className="rounded-[26px] border border-[#f3cad9] bg-white p-4 shadow-sm">
                                 <div className="text-[11px] uppercase tracking-[0.28em] text-[#cb4b84]">
-                                    Milan Rooms
+                                    Search usernames
                                 </div>
-                                <h2 className="mt-2 text-xl font-medium text-[#7c163d]">
-                                    Groups & chats
-                                </h2>
-                            </div>
 
-                            <div className="rounded-[24px] border border-[#f5bfd5] bg-[#fff3f7] p-4">
-                                <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[#b7306b]">
-                                    Create admin group
-                                </label>
                                 <input
-                                    value={newGroupName}
-                                    onChange={(e) => setNewGroupName(e.target.value)}
-                                    placeholder="Ex: Milan Ops, Content Hearts"
-                                    className="w-full rounded-2xl border border-[#efbdd1] bg-white px-4 py-3 text-sm text-black/80 outline-none placeholder:text-black/35 focus:border-[#e55291]"
+                                    value={userSearch}
+                                    onChange={(e) => setUserSearch(e.target.value)}
+                                    placeholder="Search admin usernames..."
+                                    className="mt-3 w-full rounded-2xl border border-[#efbdd1] bg-[#fff8fb] px-4 py-3 text-sm text-black/80 outline-none placeholder:text-black/35 focus:border-[#e55291]"
                                 />
 
-                                <div className="mt-3 rounded-2xl border border-[#f0c2d5] bg-white p-3">
-                                    <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-[#b7306b]">
-                                        Select admin users
+                                <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+                                    {searchableAdmins.length === 0 ? (
+                                        <div className="rounded-2xl border border-dashed border-[#f0c7d7] bg-[#fff8fb] px-4 py-4 text-sm text-black/45">
+                                            No matching usernames found.
+                                        </div>
+                                    ) : (
+                                        searchableAdmins.map((admin) => (
+                                            <button
+                                                key={admin.id}
+                                                type="button"
+                                                onClick={() => handleOpenDirectChat(admin)}
+                                                className="flex w-full items-center justify-between rounded-2xl border border-[#f1d1dc] bg-[#fffafb] px-4 py-3 text-left transition hover:border-[#ea5a93] hover:bg-[#ffeef5]"
+                                            >
+                                                <div>
+                                                    <div className="text-sm font-semibold text-[#731538]">
+                                                        @{admin.username}
+                                                    </div>
+                                                    <div className="mt-1 text-xs text-black/45">
+                                                        {admin.firstName} {admin.lastName}
+                                                    </div>
+                                                </div>
+                                                <div className="rounded-full bg-[#ffe2ed] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#b72c69]">
+                                                    Chat
+                                                </div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="mt-4 rounded-[26px] border border-[#f3cad9] bg-white p-4 shadow-sm">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.28em] text-[#cb4b84]">
+                                            Groups
+                                        </div>
+                                        <div className="mt-1 text-sm font-medium text-[#731538]">
+                                            Create only when needed
+                                        </div>
                                     </div>
 
-                                    <div className="max-h-44 space-y-2 overflow-y-auto">
-                                        {adminDirectory.length === 0 ? (
-                                            <div className="rounded-xl bg-[#fff6fa] px-3 py-3 text-sm text-black/50">
-                                                No admin usernames found yet.
-                                            </div>
-                                        ) : (
-                                            adminDirectory.map((admin) => {
-                                                const checked = selectedAdminIds.includes(admin.id);
-                                                const isCurrentAdmin = admin.id === userId;
-
-                                                return (
-                                                    <label
-                                                        key={admin.id}
-                                                        className={`flex cursor-pointer items-center justify-between rounded-2xl border px-3 py-3 text-sm transition ${checked
-                                                            ? "border-[#ea5a93] bg-[#ffe4ef]"
-                                                            : "border-[#f1d1dc] bg-[#fffafb]"
-                                                            }`}
-                                                    >
-                                                        <div>
-                                                            <div className="font-medium text-[#74153a]">
-                                                                @{admin.username}
-                                                            </div>
-                                                            <div className="text-[11px] uppercase tracking-[0.16em] text-black/45">
-                                                                {isCurrentAdmin ? "You" : "Admin user"}
-                                                            </div>
-                                                        </div>
-
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={checked}
-                                                            onChange={() => toggleAdminSelection(admin.id)}
-                                                            className="h-4 w-4 accent-[#ea4f8a]"
-                                                        />
-                                                    </label>
-                                                );
-                                            })
-                                        )}
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateGroupPanel((prev) => !prev)}
+                                        className="rounded-full bg-[#e94685] px-4 py-2 text-xs uppercase tracking-[0.2em] text-white transition hover:bg-[#d93778]"
+                                    >
+                                        {showCreateGroupPanel ? "Close" : "New Group"}
+                                    </button>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={handleCreateGroup}
-                                    disabled={creatingGroup || !adminLoggedIn}
-                                    className="mt-3 inline-flex rounded-full bg-[#e94685] px-5 py-3 text-xs uppercase tracking-[0.22em] text-white transition hover:bg-[#d93778] disabled:opacity-60"
-                                >
-                                    {creatingGroup ? "Creating..." : "Create Group"}
-                                </button>
+                                {showCreateGroupPanel ? (
+                                    <div className="mt-4 rounded-[22px] border border-[#f3cad9] bg-[#fff7fa] p-4">
+                                        <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[#b7306b]">
+                                            Group name
+                                        </label>
+                                        <input
+                                            value={newGroupName}
+                                            onChange={(e) => setNewGroupName(e.target.value)}
+                                            placeholder="Ex: Milan Ops, Ticket Review"
+                                            className="w-full rounded-2xl border border-[#efbdd1] bg-white px-4 py-3 text-sm text-black/80 outline-none placeholder:text-black/35 focus:border-[#e55291]"
+                                        />
 
-                                {!adminLoggedIn ? (
-                                    <p className="mt-2 text-xs leading-6 text-black/50">
-                                        Only admin users can create separate admin groups.
-                                    </p>
+                                        <div className="mt-4 text-[11px] uppercase tracking-[0.22em] text-[#b7306b]">
+                                            Select users
+                                        </div>
+
+                                        <div className="mt-2 max-h-52 space-y-2 overflow-y-auto rounded-2xl border border-[#f0c2d5] bg-white p-3">
+                                            {adminDirectory.length === 0 ? (
+                                                <div className="rounded-xl bg-[#fff6fa] px-3 py-3 text-sm text-black/50">
+                                                    No admin usernames found yet.
+                                                </div>
+                                            ) : (
+                                                adminDirectory.map((admin) => {
+                                                    const checked = selectedAdminIds.includes(admin.id);
+                                                    const isCurrentAdmin = admin.id === userId;
+
+                                                    return (
+                                                        <label
+                                                            key={admin.id}
+                                                            className={`flex cursor-pointer items-center justify-between rounded-2xl border px-3 py-3 text-sm transition ${checked
+                                                                    ? "border-[#ea5a93] bg-[#ffe4ef]"
+                                                                    : "border-[#f1d1dc] bg-[#fffafb]"
+                                                                }`}
+                                                        >
+                                                            <div>
+                                                                <div className="font-medium text-[#74153a]">
+                                                                    @{admin.username}
+                                                                </div>
+                                                                <div className="text-[11px] uppercase tracking-[0.16em] text-black/45">
+                                                                    {isCurrentAdmin ? "You" : "Admin user"}
+                                                                </div>
+                                                            </div>
+
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={checked}
+                                                                onChange={() => toggleAdminSelection(admin.id)}
+                                                                className="h-4 w-4 accent-[#ea4f8a]"
+                                                            />
+                                                        </label>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleCreateGroup}
+                                            disabled={creatingGroup || !adminLoggedIn}
+                                            className="mt-4 inline-flex rounded-full bg-[#e94685] px-5 py-3 text-xs uppercase tracking-[0.22em] text-white transition hover:bg-[#d93778] disabled:opacity-60"
+                                        >
+                                            {creatingGroup ? "Creating..." : "Create Group"}
+                                        </button>
+
+                                        {!adminLoggedIn ? (
+                                            <p className="mt-2 text-xs leading-6 text-black/50">
+                                                Only admin users can create groups.
+                                            </p>
+                                        ) : null}
+                                    </div>
                                 ) : null}
                             </div>
 
-                            <div className="mt-5 space-y-2">
-                                {loadingRooms ? (
-                                    <div className="rounded-2xl border border-[#f2c6d7] bg-white px-4 py-5 text-sm text-black/55">
-                                        Loading rooms...
-                                    </div>
-                                ) : rooms.length === 0 ? (
-                                    <div className="rounded-2xl border border-[#f2c6d7] bg-white px-4 py-5 text-sm text-black/55">
-                                        No rooms yet.
-                                    </div>
-                                ) : (
-                                    rooms.map((room) => {
-                                        const active = room.id === activeRoomId;
-                                        const meta = roomMetaMap[room.id];
+                            <div className="mt-4 rounded-[26px] border border-[#f3cad9] bg-white p-4 shadow-sm">
+                                <div className="text-[11px] uppercase tracking-[0.28em] text-[#cb4b84]">
+                                    Direct chats
+                                </div>
 
-                                        return (
-                                            <button
-                                                key={room.id}
-                                                type="button"
-                                                onClick={() => setActiveRoomId(room.id)}
-                                                className={`w-full rounded-[22px] border px-4 py-4 text-left transition ${active
-                                                    ? "border-[#eb5a94] bg-[#ffe3ee] shadow-sm"
-                                                    : "border-[#f2c6d7] bg-white hover:bg-[#fff2f7]"
-                                                    }`}
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <div>
-                                                        <div className="text-sm font-medium text-[#731538]">
-                                                            {room.name}
-                                                        </div>
-                                                        <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-black/45">
-                                                            {meta?.type === "direct-admin"
-                                                                ? "Direct admin chat"
-                                                                : meta?.type === "admin-group"
-                                                                    ? "Admin group"
-                                                                    : room.is_group
-                                                                        ? "Group chat"
-                                                                        : "Direct room"}
-                                                        </div>
+                                <div className="mt-3 space-y-2">
+                                    {loadingRooms ? (
+                                        <div className="rounded-2xl border border-[#f2c6d7] bg-[#fffafb] px-4 py-4 text-sm text-black/55">
+                                            Loading chats...
+                                        </div>
+                                    ) : directRooms.length === 0 ? (
+                                        <div className="rounded-2xl border border-dashed border-[#f2c6d7] bg-[#fffafb] px-4 py-4 text-sm text-black/45">
+                                            Search a username above to start your first direct chat.
+                                        </div>
+                                    ) : (
+                                        directRooms.map((room) => {
+                                            const active = room.id === activeRoomId;
+                                            const meta = roomMetaMap[room.id];
+
+                                            return (
+                                                <button
+                                                    key={room.id}
+                                                    type="button"
+                                                    onClick={() => setActiveRoomId(room.id)}
+                                                    className={`w-full rounded-[22px] border px-4 py-3 text-left transition ${active
+                                                            ? "border-[#eb5a94] bg-[#ffe3ee] shadow-sm"
+                                                            : "border-[#f2c6d7] bg-white hover:bg-[#fff2f7]"
+                                                        }`}
+                                                >
+                                                    <div className="text-sm font-semibold text-[#731538]">
+                                                        {formatRoomTitle(room, meta, username)}
                                                     </div>
-                                                    <div className="text-xl text-[#ef5f9a]">♡</div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })
-                                )}
+                                                    <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                                        Direct message
+                                                    </div>
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="mt-4 rounded-[26px] border border-[#f3cad9] bg-white p-4 shadow-sm">
+                                <div className="text-[11px] uppercase tracking-[0.28em] text-[#cb4b84]">
+                                    Groups
+                                </div>
+
+                                <div className="mt-3 space-y-2">
+                                    {loadingRooms ? (
+                                        <div className="rounded-2xl border border-[#f2c6d7] bg-[#fffafb] px-4 py-4 text-sm text-black/55">
+                                            Loading groups...
+                                        </div>
+                                    ) : groupRooms.length === 0 ? (
+                                        <div className="rounded-2xl border border-dashed border-[#f2c6d7] bg-[#fffafb] px-4 py-4 text-sm text-black/45">
+                                            No groups created yet.
+                                        </div>
+                                    ) : (
+                                        groupRooms.map((room) => {
+                                            const active = room.id === activeRoomId;
+                                            const meta = roomMetaMap[room.id];
+
+                                            return (
+                                                <button
+                                                    key={room.id}
+                                                    type="button"
+                                                    onClick={() => setActiveRoomId(room.id)}
+                                                    className={`w-full rounded-[22px] border px-4 py-3 text-left transition ${active
+                                                            ? "border-[#eb5a94] bg-[#ffe3ee] shadow-sm"
+                                                            : "border-[#f2c6d7] bg-white hover:bg-[#fff2f7]"
+                                                        }`}
+                                                >
+                                                    <div className="text-sm font-semibold text-[#731538]">
+                                                        {room.name}
+                                                    </div>
+                                                    <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-black/45">
+                                                        {meta?.memberUsernames?.length || 0} members
+                                                    </div>
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
                             </div>
                         </aside>
 
-                        <section className="flex min-h-[720px] flex-col overflow-hidden rounded-[34px] border border-[#f0b3ca] bg-white/80 shadow-[0_14px_50px_rgba(236,72,153,0.14)]">
-                            <div className="flex items-center justify-between border-b border-[#f6c7d9] bg-[linear-gradient(90deg,#ffe1ee_0%,#fff4f8_100%)] px-5 py-5">
-                                <div>
-                                    <div className="text-[11px] uppercase tracking-[0.24em] text-[#cd4f86]">
-                                        Active room
-                                    </div>
-                                    <h2 className="mt-2 text-2xl font-medium text-[#7f143d]">
-                                        {activeRoom?.name || "Select a room"}
-                                    </h2>
-
-                                    {activeRoomMeta?.memberUsernames?.length ? (
-                                        <div className="mt-3 text-sm text-black/55">
-                                            Members:{" "}
-                                            {activeRoomMeta.memberUsernames
-                                                .map((member) => `@${member}`)
-                                                .join(", ")}
+                        <section className="flex min-h-[760px] flex-col overflow-hidden rounded-[34px] border border-[#f0b3ca] bg-white/90 shadow-[0_18px_60px_rgba(236,72,153,0.14)]">
+                            <div className="border-b border-[#f6c7d9] bg-[linear-gradient(90deg,#fff7fb_0%,#ffeaf2_100%)] px-5 py-5 md:px-6">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.24em] text-[#cd4f86]">
+                                            Active conversation
                                         </div>
-                                    ) : null}
-                                </div>
+                                        <h2 className="mt-2 text-2xl font-semibold text-[#7f143d] md:text-3xl">
+                                            {activeRoomTitle}
+                                        </h2>
 
-                                <div className="flex items-center gap-2 rounded-full border border-[#efbdd1] bg-white px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#b72768]">
-                                    <span>♥</span>
-                                    <span>MILAN</span>
+                                        {activeRoomMeta?.memberUsernames?.length ? (
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {activeRoomMeta.memberUsernames.map((member) => (
+                                                    <span
+                                                        key={member}
+                                                        className="rounded-full border border-[#efbdd1] bg-white px-3 py-1 text-xs text-[#a9215a]"
+                                                    >
+                                                        @{member}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : null}
+                                    </div>
+
+                                    <div className="rounded-full border border-[#efbdd1] bg-white px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#b72768] shadow-sm">
+                                        Loomeira chat
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,#fff7fa_0%,#fff3f7_45%,#ffedf4_100%)] px-4 py-5 md:px-6">
-                                {loadingMessages ? (
+                            <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,#fffafd_0%,#fff4f8_46%,#ffedf4_100%)] px-4 py-5 md:px-6">
+                                {!activeRoomId ? (
+                                    <div className="flex h-full min-h-[440px] items-center justify-center">
+                                        <div className="max-w-lg rounded-[30px] border border-[#f3bfd3] bg-white px-7 py-10 text-center shadow-sm">
+                                            <div className="mb-4 text-4xl text-[#eb4f8d]">💬</div>
+                                            <div className="text-xl font-semibold text-[#7d173e]">
+                                                Start with a username search
+                                            </div>
+                                            <p className="mt-3 text-sm leading-7 text-black/55">
+                                                Open a direct chat from the left panel or create a group.
+                                                Once selected, your messages, GIFs, media, and LMRA tickets
+                                                will appear here.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : loadingMessages ? (
                                     <div className="rounded-2xl border border-[#f3c8d8] bg-white px-4 py-5 text-sm text-black/55">
                                         Loading messages...
                                     </div>
@@ -1017,11 +1170,11 @@ export default function LoomeiraMilanPage() {
                                         <div className="max-w-md rounded-[28px] border border-[#f3bfd3] bg-white px-6 py-8 text-center shadow-sm">
                                             <div className="mb-3 text-3xl text-[#eb4f8d]">♥</div>
                                             <div className="text-lg font-medium text-[#7d173e]">
-                                                Start the first conversation
+                                                No messages yet
                                             </div>
                                             <p className="mt-2 text-sm leading-7 text-black/55">
-                                                Use emoji or GIF picker, attach image or video files,
-                                                or send an LMRA request card.
+                                                Send the first message, drop a GIF, attach media, or share an
+                                                LMRA ticket.
                                             </p>
                                         </div>
                                     </div>
@@ -1046,15 +1199,13 @@ export default function LoomeiraMilanPage() {
                                                     className={`flex ${mine ? "justify-end" : "justify-start"}`}
                                                 >
                                                     <div
-                                                        className={`max-w-[82%] rounded-[26px] px-4 py-3 shadow-sm ${mine
-                                                            ? "bg-[#ea4f8a] text-white"
-                                                            : "border border-[#f1bfd2] bg-white text-black"
+                                                        className={`max-w-[86%] rounded-[26px] px-4 py-3 shadow-sm ${mine
+                                                                ? "bg-[linear-gradient(135deg,#ea4f8a_0%,#d81b60_100%)] text-white"
+                                                                : "border border-[#f1bfd2] bg-white text-black"
                                                             }`}
                                                     >
                                                         <div
-                                                            className={`mb-1 text-[11px] uppercase tracking-[0.18em] ${mine
-                                                                ? "text-white/75"
-                                                                : "text-[#b2346d]"
+                                                            className={`mb-1 text-[11px] uppercase tracking-[0.18em] ${mine ? "text-white/75" : "text-[#b2346d]"
                                                                 }`}
                                                         >
                                                             {message.username}
@@ -1063,14 +1214,12 @@ export default function LoomeiraMilanPage() {
                                                         {renderAsLmra && lmra ? (
                                                             <div
                                                                 className={`rounded-[22px] border px-4 py-4 ${mine
-                                                                    ? "border-white/25 bg-white/10"
-                                                                    : "border-[#efc5d7] bg-[#fff7fa]"
+                                                                        ? "border-white/25 bg-white/10"
+                                                                        : "border-[#efc5d7] bg-[#fff7fa]"
                                                                     }`}
                                                             >
                                                                 <div
-                                                                    className={`text-[11px] uppercase tracking-[0.22em] ${mine
-                                                                        ? "text-white/80"
-                                                                        : "text-[#b52e69]"
+                                                                    className={`text-[11px] uppercase tracking-[0.22em] ${mine ? "text-white/80" : "text-[#b52e69]"
                                                                         }`}
                                                                 >
                                                                     LMRA Request
@@ -1079,29 +1228,23 @@ export default function LoomeiraMilanPage() {
                                                                     {lmra.request_id || "No request ID"}
                                                                 </div>
                                                                 <div
-                                                                    className={`mt-2 text-sm ${mine
-                                                                        ? "text-white/90"
-                                                                        : "text-black/65"
+                                                                    className={`mt-2 text-sm ${mine ? "text-white/90" : "text-black/65"
                                                                         }`}
                                                                 >
                                                                     {lmra.product_type || "No product type"}
                                                                 </div>
                                                                 <div
-                                                                    className={`mt-2 text-sm leading-6 ${mine
-                                                                        ? "text-white/85"
-                                                                        : "text-black/60"
+                                                                    className={`mt-2 text-sm leading-6 ${mine ? "text-white/85" : "text-black/60"
                                                                         }`}
                                                                 >
                                                                     {lmra.description || "No description"}
                                                                 </div>
                                                                 <div
-                                                                    className={`mt-3 text-xs ${mine
-                                                                        ? "text-white/80"
-                                                                        : "text-black/50"
+                                                                    className={`mt-3 text-xs ${mine ? "text-white/80" : "text-black/50"
                                                                         }`}
                                                                 >
-                                                                    Status: {lmra.status || "submitted"} •
-                                                                    Updated: {formatDate(lmra.updated_at)}
+                                                                    Status: {lmra.status || "submitted"} • Updated:{" "}
+                                                                    {formatDate(lmra.updated_at)}
                                                                 </div>
                                                             </div>
                                                         ) : renderAsMedia && media ? (
@@ -1120,9 +1263,7 @@ export default function LoomeiraMilanPage() {
                                                                     />
                                                                 )}
                                                                 <div
-                                                                    className={`text-xs break-all ${mine
-                                                                        ? "text-white/80"
-                                                                        : "text-black/50"
+                                                                    className={`text-xs break-all ${mine ? "text-white/80" : "text-black/50"
                                                                         }`}
                                                                 >
                                                                     {media.filename}
@@ -1141,9 +1282,7 @@ export default function LoomeiraMilanPage() {
                                                         )}
 
                                                         <div
-                                                            className={`mt-2 text-[11px] ${mine
-                                                                ? "text-white/75"
-                                                                : "text-black/40"
+                                                            className={`mt-2 text-[11px] ${mine ? "text-white/75" : "text-black/40"
                                                                 }`}
                                                         >
                                                             {formatTime(message.created_at)}
@@ -1248,8 +1387,8 @@ export default function LoomeiraMilanPage() {
                                                     type="button"
                                                     onClick={() => setAttachmentTab("upload")}
                                                     className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${attachmentTab === "upload"
-                                                        ? "bg-[#ef5f9a] text-white"
-                                                        : "border border-[#efbdd1] bg-white text-[#b62b68]"
+                                                            ? "bg-[#ef5f9a] text-white"
+                                                            : "border border-[#efbdd1] bg-white text-[#b62b68]"
                                                         }`}
                                                 >
                                                     Attach file
@@ -1258,8 +1397,8 @@ export default function LoomeiraMilanPage() {
                                                     type="button"
                                                     onClick={() => setAttachmentTab("lmra")}
                                                     className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${attachmentTab === "lmra"
-                                                        ? "bg-[#ef5f9a] text-white"
-                                                        : "border border-[#efbdd1] bg-white text-[#b62b68]"
+                                                            ? "bg-[#ef5f9a] text-white"
+                                                            : "border border-[#efbdd1] bg-white text-[#b62b68]"
                                                         }`}
                                                 >
                                                     LMRA request
@@ -1357,9 +1496,11 @@ export default function LoomeiraMilanPage() {
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         placeholder={
-                                            loggedIn
-                                                ? "Type a message..."
-                                                : "Log in to join the MILAN conversation..."
+                                            !activeRoomId
+                                                ? "Select or create a chat first..."
+                                                : loggedIn
+                                                    ? "Type a message..."
+                                                    : "Log in to join the conversation..."
                                         }
                                         rows={2}
                                         onKeyDown={(e) => {
@@ -1373,7 +1514,7 @@ export default function LoomeiraMilanPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSendMessage()}
-                                        disabled={sending || !loggedIn || uploadingAttachment}
+                                        disabled={sending || !loggedIn || uploadingAttachment || !activeRoomId}
                                         className="inline-flex h-[62px] items-center rounded-full bg-[#e94685] px-7 text-xs uppercase tracking-[0.24em] text-white transition hover:bg-[#d73777] disabled:cursor-not-allowed disabled:opacity-60"
                                     >
                                         {sending ? "Sending..." : "Send ♥"}

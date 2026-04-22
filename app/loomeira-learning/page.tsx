@@ -510,6 +510,167 @@ export default function LoomeiraLearningPage() {
                         </div>
                     </div>
                 </section>
+                <div className="mt-8 grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+                    <div className="rounded-[30px] border border-[#f2cddd] bg-white p-6 shadow-sm md:p-8">
+                        <div className="text-xs uppercase tracking-[0.22em] text-black/50">
+                            AI Plan Generator
+                        </div>
+
+                        <h2 className="mt-3 text-2xl font-medium">Create a personalized plan</h2>
+
+                        <div className="mt-6 grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label className="mb-2 block text-sm text-black/60">
+                                    What would you like to learn?
+                                </label>
+                                <input
+                                    type="text"
+                                    value={topic}
+                                    onChange={(e) => setTopic(e.target.value)}
+                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm text-black/60">
+                                    Experience level
+                                </label>
+                                <select
+                                    value={experience}
+                                    onChange={(e) => setExperience(e.target.value)}
+                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
+                                >
+                                    <option>Beginner</option>
+                                    <option>Intermediate</option>
+                                    <option>Advanced</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm text-black/60">
+                                    Hours per day
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={hoursPerDay}
+                                    onChange={(e) => setHoursPerDay(e.target.value)}
+                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm text-black/60">
+                                    Days per week
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="7"
+                                    value={daysPerWeek}
+                                    onChange={(e) => setDaysPerWeek(e.target.value)}
+                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <label className="mb-2 block text-sm text-black/60">
+                                Goal or learning requirement
+                            </label>
+                            <textarea
+                                value={goal}
+                                onChange={(e) => setGoal(e.target.value)}
+                                rows={4}
+                                className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
+                            />
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                onClick={handleGeneratePlan}
+                                disabled={isGeneratingPlan}
+                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isGeneratingPlan ? "Creating plan..." : "Create plan"}
+                            </button>
+
+                            {plan.length ? (
+                                <button
+                                    type="button"
+                                    onClick={handleAddPlanToTracker}
+                                    disabled={isAddingPlanToTracker}
+                                    className="rounded-full border border-[#ea4c97] px-5 py-3 text-sm font-medium text-[#ea4c97] transition hover:bg-[#fff1f6] disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {isAddingPlanToTracker ? "Adding..." : "Add AI plan to tracker"}
+                                </button>
+                            ) : null}
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                            {plan.length ? (
+                                plan.map((item) => (
+                                    <div
+                                        key={item.week}
+                                        className="rounded-[20px] border border-black/8 bg-[#fff8fb] p-4"
+                                    >
+                                        <div className="text-xs uppercase tracking-[0.18em] text-black/45">
+                                            {item.title}
+                                        </div>
+                                        <div className="mt-2 font-medium">{item.focus}</div>
+                                        <p className="mt-2 text-sm leading-6 text-black/60">
+                                            {item.goal}
+                                        </p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm leading-7 text-black/55">
+                                    Build a plan here and then map each step into your calendar.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm md:p-8">
+                        <div className="text-xs uppercase tracking-[0.22em] text-black/50">
+                            Chat with AI
+                        </div>
+
+                        <h2 className="mt-3 text-2xl font-medium">Ask for learning help</h2>
+
+                        <div className="mt-6 max-h-[420px] space-y-4 overflow-y-auto pr-1">
+                            {chatMessages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={`max-w-[88%] rounded-[22px] px-4 py-3 text-sm leading-7 ${message.role === "assistant"
+                                        ? "bg-white text-black/75"
+                                        : "ml-auto bg-[#ea4c97] text-white"
+                                        }`}
+                                >
+                                    {message.text}
+                                </div>
+                            ))}
+                        </div>
+
+                        <form onSubmit={handleSendChat} className="mt-6 flex flex-col gap-3 md:flex-row">
+                            <input
+                                type="text"
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                placeholder="Ask about your learning plan, time, or next steps"
+                                className="flex-1 rounded-full border border-black/10 bg-white px-5 py-3 outline-none transition focus:border-[#ea4c97]"
+                            />
+                            <button
+                                type="submit"
+                                disabled={isSendingChat}
+                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isSendingChat ? "Sending..." : "Send"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 <div className="mt-12 grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
                     <div className="rounded-[30px] border border-[#f2cddd] bg-white p-5 shadow-sm md:p-7">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -847,168 +1008,6 @@ export default function LoomeiraLearningPage() {
                                 Your overall planner will appear here once you start adding goals.
                             </p>
                         )}
-                    </div>
-                </div>
-
-                <div className="mt-8 grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
-                    <div className="rounded-[30px] border border-[#f2cddd] bg-white p-6 shadow-sm md:p-8">
-                        <div className="text-xs uppercase tracking-[0.22em] text-black/50">
-                            AI Plan Generator
-                        </div>
-
-                        <h2 className="mt-3 text-2xl font-medium">Create a personalized plan</h2>
-
-                        <div className="mt-6 grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label className="mb-2 block text-sm text-black/60">
-                                    What would you like to learn?
-                                </label>
-                                <input
-                                    type="text"
-                                    value={topic}
-                                    onChange={(e) => setTopic(e.target.value)}
-                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="mb-2 block text-sm text-black/60">
-                                    Experience level
-                                </label>
-                                <select
-                                    value={experience}
-                                    onChange={(e) => setExperience(e.target.value)}
-                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
-                                >
-                                    <option>Beginner</option>
-                                    <option>Intermediate</option>
-                                    <option>Advanced</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="mb-2 block text-sm text-black/60">
-                                    Hours per day
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={hoursPerDay}
-                                    onChange={(e) => setHoursPerDay(e.target.value)}
-                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="mb-2 block text-sm text-black/60">
-                                    Days per week
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="7"
-                                    value={daysPerWeek}
-                                    onChange={(e) => setDaysPerWeek(e.target.value)}
-                                    className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
-                            <label className="mb-2 block text-sm text-black/60">
-                                Goal or learning requirement
-                            </label>
-                            <textarea
-                                value={goal}
-                                onChange={(e) => setGoal(e.target.value)}
-                                rows={4}
-                                className="w-full rounded-[18px] border border-black/10 bg-[#fffbfd] px-4 py-3 outline-none transition focus:border-[#ea4c97]"
-                            />
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap gap-3">
-                            <button
-                                type="button"
-                                onClick={handleGeneratePlan}
-                                disabled={isGeneratingPlan}
-                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {isGeneratingPlan ? "Creating plan..." : "Create plan"}
-                            </button>
-
-                            {plan.length ? (
-                                <button
-                                    type="button"
-                                    onClick={handleAddPlanToTracker}
-                                    disabled={isAddingPlanToTracker}
-                                    className="rounded-full border border-[#ea4c97] px-5 py-3 text-sm font-medium text-[#ea4c97] transition hover:bg-[#fff1f6] disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    {isAddingPlanToTracker ? "Adding..." : "Add AI plan to tracker"}
-                                </button>
-                            ) : null}
-                        </div>
-
-                        <div className="mt-6 space-y-4">
-                            {plan.length ? (
-                                plan.map((item) => (
-                                    <div
-                                        key={item.week}
-                                        className="rounded-[20px] border border-black/8 bg-[#fff8fb] p-4"
-                                    >
-                                        <div className="text-xs uppercase tracking-[0.18em] text-black/45">
-                                            {item.title}
-                                        </div>
-                                        <div className="mt-2 font-medium">{item.focus}</div>
-                                        <p className="mt-2 text-sm leading-6 text-black/60">
-                                            {item.goal}
-                                        </p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm leading-7 text-black/55">
-                                    Build a plan here and then map each step into your calendar.
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm md:p-8">
-                        <div className="text-xs uppercase tracking-[0.22em] text-black/50">
-                            Chat with AI
-                        </div>
-
-                        <h2 className="mt-3 text-2xl font-medium">Ask for learning help</h2>
-
-                        <div className="mt-6 max-h-[420px] space-y-4 overflow-y-auto pr-1">
-                            {chatMessages.map((message) => (
-                                <div
-                                    key={message.id}
-                                    className={`max-w-[88%] rounded-[22px] px-4 py-3 text-sm leading-7 ${message.role === "assistant"
-                                        ? "bg-white text-black/75"
-                                        : "ml-auto bg-[#ea4c97] text-white"
-                                        }`}
-                                >
-                                    {message.text}
-                                </div>
-                            ))}
-                        </div>
-
-                        <form onSubmit={handleSendChat} className="mt-6 flex flex-col gap-3 md:flex-row">
-                            <input
-                                type="text"
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
-                                placeholder="Ask about your learning plan, time, or next steps"
-                                className="flex-1 rounded-full border border-black/10 bg-white px-5 py-3 outline-none transition focus:border-[#ea4c97]"
-                            />
-                            <button
-                                type="submit"
-                                disabled={isSendingChat}
-                                className="rounded-full bg-[#ea4c97] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {isSendingChat ? "Sending..." : "Send"}
-                            </button>
-                        </form>
                     </div>
                 </div>
             </section>
