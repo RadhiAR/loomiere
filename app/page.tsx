@@ -385,121 +385,34 @@ export default function HomePage() {
             <section className="bg-white px-6 pb-4 pt-2 md:px-10 md:pb-6 lg:px-16">
                 <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[36px] border border-[#eadfe3] bg-[#fdf6f8] shadow-[0_20px_70px_rgba(0,0,0,0.05)]">
                     <div className="px-6 pt-12 md:px-12 md:pt-14 lg:px-16 lg:pt-16">
-                        <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-                            <div className="rounded-[32px] border border-[#efc5d7] bg-[#fdeff5] p-6 md:p-8">
-                                <p className="mb-4 text-[11px] uppercase tracking-[0.34em] text-black/45">
-                                    Contact Loomi&egrave;re
-                                </p>
 
-                                <div className="space-y-4">
-                                    <p className="text-[18px] leading-8 text-black/80 md:text-[20px]">
-                                        <span className="font-medium text-black">Email:</span>{" "}
-                                        <a
-                                            href="mailto:hello@loomiere.com"
-                                            className="font-semibold text-black transition hover:text-[#d94b8f]"
-                                        >
-                                            hello@loomiere.com
-                                        </a>
-                                    </p>
+                        {/* ✅ FULL WIDTH RETURN POLICY */}
+                        <div className="rounded-[32px] border border-[#efc5d7] bg-[#fdeff5] p-6 md:p-10 text-center">
+                            <p className="mb-4 text-[11px] uppercase tracking-[0.34em] text-black/45">
+                                Loomi&egrave;re
+                            </p>
 
-                                    <p className="text-[18px] leading-8 text-black/80 md:text-[20px]">
-                                        <span className="font-medium text-black">
-                                            WhatsApp/Text:
-                                        </span>{" "}
-                                        <span className="font-semibold text-black">
-                                            xxx-xxx-xxxx
-                                        </span>
-                                    </p>
+                            <h2 className="text-3xl font-light italic leading-tight text-black md:text-5xl">
+                                Return Policy
+                            </h2>
 
-                                    <p className="max-w-2xl text-[17px] leading-8 text-black/55">
-                                        Feel free to email us or send a WhatsApp message anytime
-                                        for product questions, custom requests, pricing, or
-                                        timelines.
-                                    </p>
-                                </div>
+                            <p className="mx-auto mt-6 max-w-2xl text-[18px] leading-8 text-black/70">
+                                Each Loomi&egrave;re piece is handmade with care. If something
+                                arrives damaged or incorrect, contact us within 7 days and
+                                we&rsquo;ll make it right.
+                            </p>
 
-                                <form onSubmit={onSubmit} className="mt-8 grid gap-4">
-                                    <input
-                                        name="name"
-                                        type="text"
-                                        required
-                                        placeholder="Your name"
-                                        className="w-full rounded-[24px] border border-[#efc5d7] bg-white px-6 py-4 text-[18px] text-black/80 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
-                                    />
-
-                                    <input
-                                        name="email"
-                                        type="email"
-                                        required
-                                        placeholder="you@email.com"
-                                        className="w-full rounded-[24px] border border-[#efc5d7] bg-white px-6 py-4 text-[18px] text-black/80 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
-                                    />
-
-                                    <input
-                                        name="phone"
-                                        type="tel"
-                                        required
-                                        placeholder="(xxx) xxx-xxxx"
-                                        className="w-full rounded-[24px] border border-[#efc5d7] bg-white px-6 py-4 text-[18px] text-black/80 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
-                                    />
-
-                                    <textarea
-                                        name="query"
-                                        required
-                                        rows={5}
-                                        placeholder="Tell us what you’re looking for — product questions, custom requests, pricing, timeline, etc."
-                                        className="w-full resize-none rounded-[24px] border border-[#efc5d7] bg-white px-6 py-5 text-[18px] leading-8 text-black/80 outline-none placeholder:text-black/35 focus:border-[#d86b98]"
-                                    />
-
-                                    {message ? (
-                                        <div
-                                            className={`rounded-[20px] border px-5 py-4 text-sm leading-7 ${messageType === "success"
-                                                ? "border-[#efc5d7] bg-white text-black/75"
-                                                : "border-[#efb7c6] bg-[#fff8fb] text-[#b24878]"
-                                                }`}
-                                        >
-                                            {message}
-                                        </div>
-                                    ) : null}
-
-                                    <button
-                                        type="submit"
-                                        disabled={submitting}
-                                        className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-[#e64d97] px-8 py-4 text-[15px] font-medium uppercase tracking-[0.28em] text-white transition hover:bg-[#d93f8b] disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                        {submitting ? "Submitting..." : "Submit"}
-                                    </button>
-                                </form>
-                            </div>
-
-                            <div className="rounded-[32px] border border-[#efc5d7] bg-[#fdeff5] p-6 md:p-8">
-                                <p className="mb-4 text-[11px] uppercase tracking-[0.34em] text-black/45">
-                                    Loomi&egrave;re
-                                </p>
-
-                                <h2 className="text-3xl font-light italic leading-tight text-black md:text-5xl">
-                                    Return Policy
-                                </h2>
-
-                                <p className="mt-6 text-[18px] leading-8 text-black/70">
-                                    Each Loomi&egrave;re piece is handmade with care. If something
-                                    arrives damaged or incorrect, contact us within 7 days and
-                                    we&rsquo;ll make it right.
-                                </p>
-
-                                <ul className="mt-8 list-disc space-y-5 pl-6 text-[18px] leading-8 text-black/70 marker:text-black/70">
-                                    <li>
-                                        Returns accepted for damaged or incorrect items within 7
-                                        days.
-                                    </li>
-                                    <li>
-                                        Custom orders are final sale unless the item arrives
-                                        damaged.
-                                    </li>
-                                    <li>Shipping fees are non-refundable.</li>
-                                </ul>
-                            </div>
+                            <ul className="mx-auto mt-8 max-w-xl list-disc space-y-5 pl-6 text-left text-[18px] leading-8 text-black/70 marker:text-black/70">
+                                <li>
+                                    Returns accepted for damaged or incorrect items within 7 days.
+                                </li>
+                                <li>
+                                    Custom orders are final sale unless the item arrives damaged.
+                                </li>
+                                <li>Shipping fees are non-refundable.</li>
+                            </ul>
                         </div>
+
                     </div>
 
                     <div className="px-6 pb-12 pt-10 md:px-12 lg:px-16" />
