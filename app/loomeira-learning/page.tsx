@@ -430,6 +430,7 @@ export default function LoomeiraLearningPage() {
         <main className="min-h-screen bg-[#fff8fb] text-[#1a1a1a]">
             <Navbar theme="light" />
 
+
             <section className="mx-auto max-w-[1400px] px-4 pb-16 pt-28 md:px-8 md:pt-32">
                 <BackButton href="/" label="Home" />
 
@@ -451,7 +452,64 @@ export default function LoomeiraLearningPage() {
                         every handmade milestone together 💖
                     </p>
                 </div>
+                <section className="mt-10">
+                    <div className="mt-12 grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+                        <div className="rounded-[32px] border border-[#f2cddd] bg-gradient-to-br from-[#fff6fa] via-[#ffeef5] to-[#ffdce9] p-6 shadow-sm md:p-8">
 
+                            <p className="text-xs uppercase tracking-[0.28em] text-black/45">
+                                Weekly Craft Feature
+                            </p>
+
+                            <h2 className="mt-3 text-3xl font-light text-black/90 md:text-4xl">
+                                Craft of the Week
+                            </h2>
+
+                            <p className="mt-4 text-sm leading-7 text-black/65 md:text-base">
+                                Discover something new and exciting every week on Loomeira Learning.
+                                A featured craft video will be uploaded for learners to follow along,
+                                practice, and enjoy at their own pace throughout the week.
+                            </p>
+
+                            <p className="mt-4 text-sm leading-7 text-black/65 md:text-base">
+                                Each video stays as the focus for the full week before the next craft
+                                is introduced, giving users enough time to learn, create, and build
+                                confidence without feeling rushed.
+                            </p>
+
+                            <div className="mt-6 grid gap-4 md:grid-cols-2">
+                                <div className="rounded-[24px] border border-[#efcfdb] bg-white/80 p-5">
+                                    <p className="text-xs uppercase tracking-[0.22em] text-black/45">
+                                        What to expect
+                                    </p>
+                                    <p className="mt-3 text-sm leading-6 text-black/70">
+                                        A new featured craft video every week with an inspiring idea
+                                        for learners to try, revisit, and complete in their own time.
+                                    </p>
+                                </div>
+
+                                <div className="rounded-[24px] border border-[#efcfdb] bg-white/80 p-5">
+                                    <p className="text-xs uppercase tracking-[0.22em] text-black/45">
+                                        Why it’s special
+                                    </p>
+                                    <p className="mt-3 text-sm leading-6 text-black/70">
+                                        This is an exciting add-on to keep the learning journey fresh,
+                                        creative, and motivating with a weekly hands-on craft focus.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 rounded-[26px] border border-dashed border-[#eba8c2] bg-white/70 p-6">
+                                <p className="text-sm uppercase tracking-[0.2em] text-black/45">
+                                    Video space
+                                </p>
+                                <div className="mt-3 flex min-h-[220px] items-center justify-center rounded-[22px] bg-[#ffe7f1] text-center text-sm text-black/50">
+                                    Craft video of the week will appear here
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
                 <div className="mt-12 grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
                     <div className="rounded-[30px] border border-[#f2cddd] bg-white p-5 shadow-sm md:p-7">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -520,8 +578,8 @@ export default function LoomeiraLearningPage() {
                                         type="button"
                                         onClick={() => setSelectedDate(dateKey)}
                                         className={`min-h-[88px] rounded-[20px] border p-3 text-left transition ${isSelected
-                                                ? "border-[#ea4c97] bg-[#ffe9f2]"
-                                                : "border-black/8 bg-[#fffbfd] hover:bg-[#fff1f6]"
+                                            ? "border-[#ea4c97] bg-[#ffe9f2]"
+                                            : "border-black/8 bg-[#fffbfd] hover:bg-[#fff1f6]"
                                             } ${isCurrentMonth ? "text-black" : "text-black/30"}`}
                                     >
                                         <div className="flex items-center justify-between">
@@ -926,8 +984,8 @@ export default function LoomeiraLearningPage() {
                                 <div
                                     key={message.id}
                                     className={`max-w-[88%] rounded-[22px] px-4 py-3 text-sm leading-7 ${message.role === "assistant"
-                                            ? "bg-white text-black/75"
-                                            : "ml-auto bg-[#ea4c97] text-white"
+                                        ? "bg-white text-black/75"
+                                        : "ml-auto bg-[#ea4c97] text-white"
                                         }`}
                                 >
                                     {message.text}

@@ -690,6 +690,17 @@ export default function Navbar({ theme = "dark" }: Props) {
                         </div>
 
                         <div className="flex flex-col px-3 py-3">
+
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    onClick={() => requireProfileAccess("/my-dashboard")}
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                >
+                                    My Dashboard
+                                </button>
+                            ) : null}
+
                             <button
                                 type="button"
                                 className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
@@ -697,6 +708,25 @@ export default function Navbar({ theme = "dark" }: Props) {
                             >
                                 Loomeira AI
                             </button>
+
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => requireProfileAccess("/customize")}
+                            >
+                                Customize
+                            </button>
+
+                            {adminActive ? (
+                                <button
+                                    type="button"
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                    onClick={() => requireProfileAccess("/loomeira-milan")}
+                                >
+                                    Loomeira - MILAN
+                                </button>
+                            ) : null}
+
 
                             {adminActive ? (
                                 <button
@@ -711,47 +741,10 @@ export default function Navbar({ theme = "dark" }: Props) {
                             {adminActive ? (
                                 <button
                                     type="button"
-                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                    onClick={() => requireProfileAccess("/loomeira-milan")}
-                                >
-                                    Loomeira - MILAN
-                                </button>
-                            ) : null}
-
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => requireProfileAccess("/customize")}
-                            >
-                                Customize
-                            </button>
-
-                            <button
-                                type="button"
-                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                onClick={() => goPublic("/subscriptions")}
-                            >
-                                Subscriptions
-                            </button>
-
-
-                            {adminActive ? (
-                                <button
-                                    type="button"
                                     onClick={() => requireProfileAccess("/customize/requests")}
                                     className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
                                 >
                                     Submitted Requests
-                                </button>
-                            ) : null}
-
-                            {adminActive ? (
-                                <button
-                                    type="button"
-                                    onClick={() => requireProfileAccess("/my-dashboard")}
-                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
-                                >
-                                    My Dashboard
                                 </button>
                             ) : null}
 
@@ -764,6 +757,14 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     Upload your products
                                 </button>
                             ) : null}
+
+                            <button
+                                type="button"
+                                className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
+                                onClick={() => goPublic("/subscriptions")}
+                            >
+                                Subscriptions
+                            </button>
 
                             <div className="mt-4 px-4">
                                 <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-black/45">
