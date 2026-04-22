@@ -452,10 +452,10 @@ export default function LoomeiraLearningPage() {
                         every handmade milestone together 💖
                     </p>
                 </div>
-                <section className="mt-10">
-                    <div className="mt-12 grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-                        <div className="rounded-[32px] border border-[#f2cddd] bg-gradient-to-br from-[#fff6fa] via-[#ffeef5] to-[#ffdce9] p-6 shadow-sm md:p-8">
 
+                <section className="pb-2 pt-8">
+                    <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+                        <div className="rounded-[30px] border border-[#f2cddd] bg-[#ffe9f2] p-6 shadow-sm md:p-8">
                             <p className="text-xs uppercase tracking-[0.28em] text-black/45">
                                 Weekly Craft Feature
                             </p>
@@ -464,13 +464,13 @@ export default function LoomeiraLearningPage() {
                                 Craft of the Week
                             </h2>
 
-                            <p className="mt-4 text-sm leading-7 text-black/65 md:text-base">
+                            <p className="mt-4 max-w-4xl text-sm leading-7 text-black/65 md:text-base">
                                 Discover something new and exciting every week on Loomeira Learning.
                                 A featured craft video will be uploaded for learners to follow along,
                                 practice, and enjoy at their own pace throughout the week.
                             </p>
 
-                            <p className="mt-4 text-sm leading-7 text-black/65 md:text-base">
+                            <p className="mt-4 max-w-4xl text-sm leading-7 text-black/65 md:text-base">
                                 Each video stays as the focus for the full week before the next craft
                                 is introduced, giving users enough time to learn, create, and build
                                 confidence without feeling rushed.
@@ -498,15 +498,15 @@ export default function LoomeiraLearningPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 rounded-[26px] border border-dashed border-[#eba8c2] bg-white/70 p-6">
+                            <div className="mt-6 rounded-[24px] border border-dashed border-[#eba8c2] bg-white/70 p-5 md:p-6">
                                 <p className="text-sm uppercase tracking-[0.2em] text-black/45">
                                     Video space
                                 </p>
-                                <div className="mt-3 flex min-h-[220px] items-center justify-center rounded-[22px] bg-[#ffe7f1] text-center text-sm text-black/50">
+
+                                <div className="mt-3 flex min-h-[220px] items-center justify-center rounded-[20px] bg-[#ffe7f1] text-center text-sm text-black/50 md:min-h-[260px]">
                                     Craft video of the week will appear here
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </section>
