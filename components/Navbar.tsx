@@ -752,7 +752,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => requireProfileAccess("/upload-products")}
-                                    className="block w-full rounded-2xl border border-[#efc5d7] bg-white px-5 py-4 text-left text-[13px] uppercase tracking-[0.22em] text-black/75 transition hover:bg-[#ffe3ee]"
+                                    className="rounded-xl px-4 py-3 text-left text-sm text-black/80 hover:bg-[#ffe3ee]"
                                 >
                                     Upload your products
                                 </button>
