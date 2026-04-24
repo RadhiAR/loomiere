@@ -7,45 +7,52 @@ import type { SubscriptionPlan } from "@/lib/profile";
 
 const plans = [
     {
-        key: "pink" as SubscriptionPlan,
-        name: "Pink",
-        billing: "Annually",
-        price: "$99.99",
-        originalPrice: "$129.99",
-        description: "Best value for year-round Loomière access.",
-        benefits: [
-            "1 month free trial allowed.",
-            "Then $99.99 if subscribed for one year.",
-            "Original price: $129.99.",
-            "Cancellation allowed within first 30 days of payment with a full refund.",
-            "After first month, 80% will be refunded.",
-            "User can sell up to 300 products annually.",
-        ],
-    },
-    {
-        key: "silver" as SubscriptionPlan,
-        name: "Silver",
-        billing: "Quarterly",
-        price: "$39.99",
-        description: "Flexible seasonal membership plan.",
-        benefits: [
-            "7 day free trial allowed.",
-            "Then $39.99 if subscribed quarterly.",
-            "Cancellation allowed within first 7 days of payment with a full refund.",
-            "User can sell up to 70 products every quarter.",
-        ],
-    },
-    {
-        key: "bronze" as SubscriptionPlan,
-        name: "Bronze",
+        key: "aura" as SubscriptionPlan,
+        name: "Aura",
         billing: "Monthly",
-        price: "$19.99",
-        description: "Simple monthly access to member benefits.",
+        price: "$29.99",
+        originalPrice: "$99.99",
+        description: "Perfect for emerging creators starting their journey on Loomeira.",
         benefits: [
-            "3 day free trial allowed.",
-            "Then $19.99 if subscribed monthly.",
-            "Cancellation allowed within first 3 days of payment with a full refund.",
-            "User can sell up to 30 products every month.",
+            "Eligible for up to  category-matched customer request tickets per year.",
+            "Access to Loomeira Learning with AI-generated craft plans.",
+            "Basic creator dashboard to track uploads and activity.",
+            "Standard product visibility across marketplace.",
+            "Upload and sell handmade products.",
+            "Community access to Milan chat.",
+            "Cancellation allowed within first 30 days with full refund.",
+        ],
+    },
+    {
+        key: "velour" as SubscriptionPlan,
+        name: "Velour",
+        billing: "Quarterly",
+        price: "$49.99",
+        description: "For growing creators who want more visibility and opportunities.",
+        benefits: [
+            "Eligible for up to 79 category-matched customer request tickets per year.",
+            "Priority ticket assignment within selected categories.",
+            "Enhanced creator dashboard with performance insights.",
+            "Improved product visibility and occasional featured placement.",
+            "Access to Loomeira Learning + AI planner + calendar tracking.",
+            "Stronger presence in Milan creator network.",
+            "7 day free trial with full refund policy.",
+        ],
+    },
+    {
+        key: "elite" as SubscriptionPlan,
+        name: "Élite",
+        billing: "Annually",
+        price: "$129.99",
+        description: "Designed for top creators ready to scale their handmade brand.",
+        benefits: [
+            "Eligible for up to 99 category-matched customer request tickets per year.",
+            "Highest priority ticket assignment across categories.",
+            "Premium creator badge with top visibility.",
+            "Advanced analytics dashboard for growth tracking.",
+            "Early access to new Loomeira features and tools.",
+            "Priority support and faster request handling.",
+            "Exclusive access to premium learning content & workshops.",
         ],
     },
 ];
@@ -64,7 +71,7 @@ export default function SubscriptionsPage() {
             <section className="mx-auto max-w-7xl px-6 py-12">
                 <h1 className="text-4xl font-light italic text-black/90">Subscriptions</h1>
                 <p className="mt-3 text-sm text-black/60">
-                    Choose the Loomière plan that fits your lifestyle.
+                    Choose your Loomeira creator plan and unlock opportunities to grow, learn, and sell.
                 </p>
 
                 <div className="mt-10 grid gap-6 md:grid-cols-3">

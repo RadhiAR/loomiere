@@ -31,8 +31,11 @@ type StoredAdminUser = {
     id: string;
     firstName: string;
     lastName: string;
+    phone: string;
     email: string;
     username: string;
+    interestedCategory: string;
+    craftSpecialty: string;
     password: string;
     createdAt: string;
 };
@@ -227,8 +230,11 @@ export default function Navbar({ theme = "dark" }: Props) {
 
     const [adminSignupFirstName, setAdminSignupFirstName] = useState("");
     const [adminSignupLastName, setAdminSignupLastName] = useState("");
+    const [adminSignupPhone, setAdminSignupPhone] = useState("");
     const [adminSignupEmail, setAdminSignupEmail] = useState("");
     const [adminSignupUsername, setAdminSignupUsername] = useState("");
+    const [adminSignupCategory, setAdminSignupCategory] = useState("");
+    const [adminSignupCraftType, setAdminSignupCraftType] = useState("");
     const [adminSignupPassword, setAdminSignupPassword] = useState("");
     const [adminSignupConfirmPassword, setAdminSignupConfirmPassword] = useState("");
     const [adminSignupError, setAdminSignupError] = useState("");
@@ -321,8 +327,11 @@ export default function Navbar({ theme = "dark" }: Props) {
 
         setAdminSignupFirstName("");
         setAdminSignupLastName("");
+        setAdminSignupPhone("");
         setAdminSignupEmail("");
         setAdminSignupUsername("");
+        setAdminSignupCategory("");
+        setAdminSignupCraftType("");
         setAdminSignupPassword("");
         setAdminSignupConfirmPassword("");
         setAdminSignupError("");
@@ -486,8 +495,11 @@ export default function Navbar({ theme = "dark" }: Props) {
         if (
             !adminSignupFirstName.trim() ||
             !adminSignupLastName.trim() ||
+            !adminSignupPhone.trim() ||
             !adminSignupEmail.trim() ||
             !adminSignupUsername.trim() ||
+            !adminSignupCategory.trim() ||
+            !adminSignupCraftType.trim() ||
             !adminSignupPassword.trim() ||
             !adminSignupConfirmPassword.trim()
         ) {
@@ -525,8 +537,11 @@ export default function Navbar({ theme = "dark" }: Props) {
             id: `admin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             firstName: adminSignupFirstName.trim(),
             lastName: adminSignupLastName.trim(),
+            phone: adminSignupPhone.trim(),
             email: normalizedEmail,
             username: adminSignupUsername.trim(),
+            interestedCategory: adminSignupCategory.trim(),
+            craftSpecialty: adminSignupCraftType.trim(),
             password: adminSignupPassword,
             createdAt: new Date().toISOString(),
         };
@@ -536,7 +551,7 @@ export default function Navbar({ theme = "dark" }: Props) {
         saveAdminKey(nextAdmin.id);
         refreshAdminState();
         closeAuth();
-        router.push("/upload-products");
+        router.push("/subscriptions");
     }
 
     function handleForgotPassword() {
@@ -668,15 +683,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                     <aside className="absolute right-0 top-0 h-full w-[320px] overflow-y-auto border-l border-[#f2cddd] bg-[#fff7fa] shadow-2xl">
                         <div className="flex items-start justify-between border-b border-[#f2cddd] pr-5 pt-3 pb-4">
                             <div className="flex flex-col items-start pl-7">
-                                <BrandLogo
-                                    href="/"
-                                    size="lg"
-                                    variant="dark"
-                                    className="!m-0 !block !p-0"
-                                />
-                                <div className="-mt-2 text-sm font-medium text-black/55">
-                                    Loomèira Menu
-                                </div>
+                                <BrandLogo href="/" size="lg" variant="dark" className="!m-0 !block !p-0" />
+                                <div className="-mt-2 text-sm font-medium text-black/55">Loomèira Menu</div>
                             </div>
 
                             <button
@@ -690,7 +698,6 @@ export default function Navbar({ theme = "dark" }: Props) {
                         </div>
 
                         <div className="flex flex-col px-3 py-3">
-
                             {adminActive ? (
                                 <button
                                     type="button"
@@ -726,7 +733,6 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     Loomeira - MILAN
                                 </button>
                             ) : null}
-
 
                             {adminActive ? (
                                 <button
@@ -937,7 +943,9 @@ export default function Navbar({ theme = "dark" }: Props) {
                         </div>
 
                         <div className="mt-5">
-                            <div className="mb-3 text-xs uppercase tracking-[0.18em] text-black/45">Popular searches</div>
+                            <div className="mb-3 text-xs uppercase tracking-[0.18em] text-black/45">
+                                Popular searches
+                            </div>
                             <div className="flex flex-wrap gap-2">
                                 {SEARCH_SUGGESTIONS.map((item) => (
                                     <button
@@ -960,7 +968,9 @@ export default function Navbar({ theme = "dark" }: Props) {
                     <div className="mx-auto mt-20 w-[92%] max-w-4xl rounded-[30px] border border-[#f2cddd] bg-[#fff7fa] p-6 shadow-2xl">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <div className="text-xs uppercase tracking-[0.22em] text-black/45">Loomeira Account</div>
+                                <div className="text-xs uppercase tracking-[0.22em] text-black/45">
+                                    Loomeira Account
+                                </div>
                                 <h3 className="mt-2 text-2xl font-light italic text-black/90">
                                     {authView === "login" && "Login"}
                                     {authView === "signup" && "Create Profile"}
@@ -992,8 +1002,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminLoginError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "login"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Login
@@ -1007,8 +1017,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setAdminSignupError("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "signup"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Sign Up
@@ -1021,8 +1031,8 @@ export default function Navbar({ theme = "dark" }: Props) {
                                     setForgotMessage("");
                                 }}
                                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em] ${authView === "forgot"
-                                    ? "bg-[#ef5f9a] text-white"
-                                    : "border border-[#efc5d7] bg-white text-black/70"
+                                        ? "bg-[#ef5f9a] text-white"
+                                        : "border border-[#efc5d7] bg-white text-black/70"
                                     }`}
                             >
                                 Forgot Password
@@ -1106,15 +1116,13 @@ export default function Navbar({ theme = "dark" }: Props) {
                                             <div className="text-sm text-[#c8487d]">{adminLoginError}</div>
                                         ) : null}
 
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={handleAdminLogin}
-                                                className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
-                                            >
-                                                Login as Admin
-                                            </button>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleAdminLogin}
+                                            className="w-fit rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
+                                        >
+                                            Login as Admin
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1177,7 +1185,9 @@ export default function Navbar({ theme = "dark" }: Props) {
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
 
-                                        {signupError ? <div className="sm:col-span-2 text-sm text-[#c8487d]">{signupError}</div> : null}
+                                        {signupError ? (
+                                            <div className="sm:col-span-2 text-sm text-[#c8487d]">{signupError}</div>
+                                        ) : null}
 
                                         <div className="sm:col-span-2">
                                             <button
@@ -1206,12 +1216,22 @@ export default function Navbar({ theme = "dark" }: Props) {
                                             placeholder="First Name"
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
+
                                         <input
                                             value={adminSignupLastName}
                                             onChange={(e) => setAdminSignupLastName(e.target.value)}
                                             placeholder="Last Name"
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
+
+                                        <input
+                                            type="tel"
+                                            value={adminSignupPhone}
+                                            onChange={(e) => setAdminSignupPhone(e.target.value)}
+                                            placeholder="Phone Number"
+                                            className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
+                                        />
+
                                         <input
                                             type="email"
                                             value={adminSignupEmail}
@@ -1219,12 +1239,45 @@ export default function Navbar({ theme = "dark" }: Props) {
                                             placeholder="Email"
                                             className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
+
                                         <input
                                             value={adminSignupUsername}
                                             onChange={(e) => setAdminSignupUsername(e.target.value)}
                                             placeholder="Admin Username"
                                             className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
+
+                                        <select
+                                            value={adminSignupCategory}
+                                            onChange={(e) => setAdminSignupCategory(e.target.value)}
+                                            className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/60 outline-none focus:border-[#d86b98]"
+                                        >
+                                            <option value="">Interested Category</option>
+                                            <option value="home-decor">Home Decor</option>
+                                            <option value="pet">Pet Products</option>
+                                            <option value="jewellery">Jewellery</option>
+                                            <option value="apparel">Apparel</option>
+                                        </select>
+
+                                        <select
+                                            value={adminSignupCraftType}
+                                            onChange={(e) => setAdminSignupCraftType(e.target.value)}
+                                            className="sm:col-span-2 w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm text-black/60 outline-none focus:border-[#d86b98]"
+                                        >
+                                            <option value="">Craft Specialty</option>
+                                            <option value="knitting">Knitting</option>
+                                            <option value="crochet">Crochet</option>
+                                            <option value="embroidery">Embroidery</option>
+                                            <option value="resin">Resin Art</option>
+                                            <option value="clay">Mud / Clay Crafting</option>
+                                            <option value="beadwork">Beadwork</option>
+                                            <option value="macrame">Macramé</option>
+                                            <option value="wood-crafting">Wood Crafting</option>
+                                            <option value="candle-making">Candle Making</option>
+                                            <option value="soap-making">Soap Making</option>
+                                            <option value="other">Other Handmade Craft</option>
+                                        </select>
+
                                         <input
                                             type="password"
                                             value={adminSignupPassword}
@@ -1232,6 +1285,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                                             placeholder="Password"
                                             className="w-full rounded-xl border border-[#efc5d7] bg-white px-4 py-3 text-sm outline-none focus:border-[#d86b98]"
                                         />
+
                                         <input
                                             type="password"
                                             value={adminSignupConfirmPassword}
@@ -1244,7 +1298,9 @@ export default function Navbar({ theme = "dark" }: Props) {
                                         />
 
                                         {adminSignupError ? (
-                                            <div className="sm:col-span-2 text-sm text-[#c8487d]">{adminSignupError}</div>
+                                            <div className="sm:col-span-2 text-sm text-[#c8487d]">
+                                                {adminSignupError}
+                                            </div>
                                         ) : null}
 
                                         <div className="sm:col-span-2">
@@ -1253,7 +1309,7 @@ export default function Navbar({ theme = "dark" }: Props) {
                                                 onClick={handleAdminSignup}
                                                 className="rounded-full bg-[#ef5f9a] px-6 py-3 text-xs uppercase tracking-[0.18em] text-white hover:bg-[#de4d8b]"
                                             >
-                                                Create Admin Account
+                                                Create Admin Account & Choose Plan
                                             </button>
                                         </div>
                                     </div>
