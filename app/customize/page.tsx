@@ -1,15 +1,127 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { trackRequestId } from "@/lib/custom-request-tracker";
 
+type AddressSuggestion = {
+    display_name: string;
+    address?: {
+        house_number?: string;
+        road?: string;
+        suburb?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        county?: string;
+        state?: string;
+        postcode?: string;
+        country?: string;
+    };
+};
+
 export default function CustomizePage() {
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+
+    const [addressQuery, setAddressQuery] = useState("");
+    const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+    const [showAddressDropdown, setShowAddressDropdown] = useState(false);
+    const [addressLoading, setAddressLoading] = useState(false);
+
+    const [city, setCity] = useState("");
+    const [stateValue, setStateValue] = useState("");
+    const [zipcode, setZipcode] = useState("");
+    const [country, setCountry] = useState("");
+
+    const addressBoxRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                addressBoxRef.current &&
+                !addressBoxRef.current.contains(event.target as Node)
+            ) {
+                setShowAddressDropdown(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const trimmedQuery = addressQuery.trim();
+
+        if (trimmedQuery.length < 3) {
+            setAddressSuggestions([]);
+            setShowAddressDropdown(false);
+            setAddressLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(async () => {
+            try {
+                setAddressLoading(true);
+
+                const params = new URLSearchParams({
+                    q: trimmedQuery,
+                    format: "json",
+                    addressdetails: "1",
+                    limit: "5",
+                    countrycodes: "us",
+                });
+
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+                    {
+                        signal: controller.signal,
+                        headers: {
+                            Accept: "application/json",
+                        },
+                    }
+                );
+
+                if (!res.ok) {
+                    throw new Error("Unable to load address suggestions.");
+                }
+
+                const data = (await res.json()) as AddressSuggestion[];
+                setAddressSuggestions(data);
+                setShowAddressDropdown(true);
+            } catch (err: any) {
+                if (err?.name !== "AbortError") {
+                    setAddressSuggestions([]);
+                    setShowAddressDropdown(false);
+                }
+            } finally {
+                setAddressLoading(false);
+            }
+        }, 350);
+
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
+    }, [addressQuery]);
+
+    function selectAddress(suggestion: AddressSuggestion) {
+        const address = suggestion.address || {};
+        const streetAddress = [address.house_number, address.road]
+            .filter(Boolean)
+            .join(" ");
+
+        setAddressQuery(streetAddress || suggestion.display_name);
+        setCity(address.city || address.town || address.village || address.suburb || "");
+        setStateValue(address.state || "");
+        setZipcode(address.postcode || "");
+        setCountry(address.country || "United States");
+        setShowAddressDropdown(false);
+    }
 
     async function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -38,6 +150,13 @@ export default function CustomizePage() {
             }
 
             form.reset();
+            setAddressQuery("");
+            setAddressSuggestions([]);
+            setShowAddressDropdown(false);
+            setCity("");
+            setStateValue("");
+            setZipcode("");
+            setCountry("");
 
             router.push(
                 requestId
@@ -200,6 +319,101 @@ export default function CustomizePage() {
                                     />
                                 </div>
 
+                                <div ref={addressBoxRef} className="relative sm:col-span-2">
+                                    <label className="text-xs uppercase tracking-[0.18em] text-black/60">
+                                        Address *
+                                    </label>
+                                    <input
+                                        name="addressLine1"
+                                        type="text"
+                                        required
+                                        value={addressQuery}
+                                        onChange={(e) => {
+                                            setAddressQuery(e.target.value);
+                                            setShowAddressDropdown(true);
+                                        }}
+                                        onFocus={() => {
+                                            if (addressSuggestions.length > 0) {
+                                                setShowAddressDropdown(true);
+                                            }
+                                        }}
+                                        className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
+                                        placeholder="Start typing your address, example: 13500 Noel Rd"
+                                    />
+
+                                    {showAddressDropdown && (
+                                        <div className="absolute left-0 right-0 top-[78px] z-50 overflow-hidden rounded-2xl border border-[#efc5d7] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.12)]">
+                                            {addressLoading ? (
+                                                <div className="px-4 py-3 text-sm text-black/50">
+                                                    Loading address suggestions...
+                                                </div>
+                                            ) : addressSuggestions.length > 0 ? (
+                                                addressSuggestions.map((suggestion, index) => (
+                                                    <button
+                                                        key={`${suggestion.display_name}-${index}`}
+                                                        type="button"
+                                                        onClick={() => selectAddress(suggestion)}
+                                                        className="block w-full border-b border-[#f8d8e6] px-4 py-3 text-left text-sm text-black/70 transition last:border-b-0 hover:bg-[#fff1f7]"
+                                                    >
+                                                        {suggestion.display_name}
+                                                    </button>
+                                                ))
+                                            ) : addressQuery.trim().length >= 3 ? (
+                                                <div className="px-4 py-3 text-sm text-black/50">
+                                                    No matching addresses found.
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-2 text-xs text-black/45">
+                                        Start typing and select the closest matching address from
+                                        the dropdown.
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.18em] text-black/60">
+                                        Apartment / Suite / Unit
+                                    </label>
+                                    <input
+                                        name="addressLine2"
+                                        type="text"
+                                        className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
+                                        placeholder="Apt, suite, unit, building, floor"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.18em] text-black/60">
+                                        City *
+                                    </label>
+                                    <input
+                                        name="city"
+                                        type="text"
+                                        required
+                                        value={city}
+                                        onChange={(e) => setCity(e.target.value)}
+                                        className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
+                                        placeholder="City"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.18em] text-black/60">
+                                        State *
+                                    </label>
+                                    <input
+                                        name="state"
+                                        type="text"
+                                        required
+                                        value={stateValue}
+                                        onChange={(e) => setStateValue(e.target.value)}
+                                        className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
+                                        placeholder="State"
+                                    />
+                                </div>
+
                                 <div>
                                     <label className="text-xs uppercase tracking-[0.18em] text-black/60">
                                         Zipcode *
@@ -209,8 +423,25 @@ export default function CustomizePage() {
                                         type="text"
                                         inputMode="numeric"
                                         required
+                                        value={zipcode}
+                                        onChange={(e) => setZipcode(e.target.value)}
                                         className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
                                         placeholder="78701"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.18em] text-black/60">
+                                        Country *
+                                    </label>
+                                    <input
+                                        name="country"
+                                        type="text"
+                                        required
+                                        value={country}
+                                        onChange={(e) => setCountry(e.target.value)}
+                                        className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
+                                        placeholder="United States"
                                     />
                                 </div>
 
@@ -224,6 +455,21 @@ export default function CustomizePage() {
                                         className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
                                         placeholder="Example: Home decor, pet wear, apparel"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs uppercase tracking-[0.18em] text-black/60">
+                                        Requested Ready Date
+                                    </label>
+                                    <input
+                                        name="requestedReadyDate"
+                                        type="date"
+                                        className="mt-2 w-full rounded-xl border border-[#efc5d7] bg-white p-3 text-sm outline-none focus:border-[#d86b98]"
+                                    />
+                                    <div className="mt-2 text-xs text-black/45">
+                                        Choose the date by which you would like the product to be
+                                        ready.
+                                    </div>
                                 </div>
 
                                 <div className="sm:col-span-2">
